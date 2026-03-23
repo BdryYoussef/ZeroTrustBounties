@@ -1,0 +1,9 @@
+[package]
+name    = "host"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+risc0-zkvm = { path = "/home/azureuser/risc0/risc0/zkvm" }
+methods    = { path = "../methods" }
+sha2       = { version = "0.10", features = ["force-soft"] }
