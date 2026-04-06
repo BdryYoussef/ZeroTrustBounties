@@ -1,0 +1,8 @@
+{
+  "project": "Zero-Trust Bounties",
+  "type": "Baseline_A",
+  "description": "Baseline Access Conditions",
+  "nodes": 512,
+  "bitmap": [1, 0, 1, 1, 0, 0, 1, 1, 0, 1],
+  "merkleRoot": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+}
