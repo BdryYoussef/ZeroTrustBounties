@@ -6,7 +6,7 @@ export default function Home() {
       <section className="glass-panel stagger-in home-shell">
         <div className="home-grid">
           <div className="stagger-in delay-1 home-tag">
-            Zero Trust Bounties · Sponsor Console
+            Zero Trust Bounties · V4.3 · Sepolia
           </div>
 
           <h1 className="hero-title title-gradient stagger-in delay-2 home-title">
@@ -16,17 +16,17 @@ export default function Home() {
           </h1>
 
           <p className="muted stagger-in delay-2 home-lead">
-            ZTB permet aux sponsors de recevoir des rapports chiffrés sur des vulnerabilites,
-            avec une cle publique partageable et une cle privee gardee hors ligne.
+            ZTB permet aux sponsors de recevoir des rapports chiffrés sur des vulnérabilités,
+            avec une clé publique partageable et une clé privée gardée hors ligne.
           </p>
 
           <div className="stagger-in delay-3 home-actions">
             <Link href="/sponsor" className="app-btn primary">
-              Ouvrir l&apos;interface Sponsor
+              Interface Sponsor →
             </Link>
-            <div className="app-btn secondary home-status">
-              Sepolia ready · Wallet connecte via MetaMask
-            </div>
+            <Link href="/hacker" className="app-btn warn">
+              Portail Hacker →
+            </Link>
           </div>
 
           <div className="stagger-in delay-3 home-cards">
@@ -41,6 +41,10 @@ export default function Home() {
             <div className="glass-panel home-card">
               <p className="muted home-card-label">Cipher</p>
               <p className="home-card-value">AES-GCM + secp256k1</p>
+            </div>
+            <div className="glass-panel home-card">
+              <p className="muted home-card-label">Hackers</p>
+              <p className="home-card-value">Commit → Submit</p>
             </div>
           </div>
         </div>

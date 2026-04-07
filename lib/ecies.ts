@@ -80,6 +80,50 @@ export async function encryptPayload(
   }
 }
 
+export async function decryptPayload(
+  serializedHex: string,
+  privateKeyHex: string
+): Promise<Uint8Array> {
+  const bytes = hexToBytes(serializedHex)
+  let privKey = hexToBytes(privateKeyHex)
+
+  if (bytes.length < 65 + 12 + 16) {
+    throw new Error("Payload cryptographique invalide (trop court).")
+  }
+
+  const ephPubKey  = bytes.slice(0, 65)
+  const iv         = bytes.slice(65, 77)
+  const tag        = bytes.slice(77, 93)
+  const ciphertext = bytes.slice(93)
+
+  const encryptedData = new Uint8Array(ciphertext.length + tag.length)
+  encryptedData.set(ciphertext, 0)
+  encryptedData.set(tag, ciphertext.length)
+
+  const sharedPoint  = secp256k1.getSharedSecret(privKey, ephPubKey)
+  const sharedSecret = sharedPoint.slice(1, 33)
+
+  const aesKeyBytes = hkdf(
+    sha256,
+    sharedSecret,
+    undefined,
+    new TextEncoder().encode('ZTB-ECIES-V4.3'),
+    32
+  )
+
+  const aesKeyBuffer = Uint8Array.from(aesKeyBytes)
+
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw', aesKeyBuffer, { name: 'AES-GCM' }, false, ['decrypt']
+  )
+
+  const decryptedBuffer = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv }, cryptoKey, encryptedData
+  )
+
+  return new Uint8Array(decryptedBuffer)
+}
+
 function toHex(bytes: Uint8Array): string {
   return Array.from(bytes)
     .map(b => b.toString(16).padStart(2, '0'))

@@ -502,3 +502,288 @@ body {
     padding: 22px 14px;
   }
 }
+
+/* ── Hacker Portal ─────────────────────────────────────────── */
+
+.hacker-wrap {
+  max-width: 860px;
+  margin: 0 auto;
+  display: grid;
+  gap: 18px;
+}
+
+.hacker-header {
+  padding: 26px 24px 22px;
+}
+
+.hacker-header-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hacker-title {
+  margin: 0;
+  font-size: clamp(1.8rem, 6vw, 3.2rem);
+}
+
+/* Steps */
+.hacker-step {
+  padding: 22px 22px;
+  display: grid;
+  gap: 0;
+  transition: opacity 220ms ease;
+}
+
+.hacker-step-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.hacker-step-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.hacker-step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(95, 168, 211, 0.16);
+  border: 1px solid rgba(95, 168, 211, 0.3);
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+/* Error banner */
+.hacker-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-color: rgba(199, 116, 116, 0.4);
+  color: var(--bad-text);
+  font-size: 0.88rem;
+}
+
+.hacker-error-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+/* Input row */
+.hacker-input-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.hacker-id-input {
+  min-width: 0;
+  padding: 10px 12px;
+}
+
+/* Bounty info card */
+.hacker-bounty-card {
+  background: rgba(11, 22, 36, 0.55);
+  border: 1px solid rgba(123, 151, 186, 0.2);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.hacker-bounty-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Drop zone */
+.hacker-dropzone {
+  border: 2px dashed rgba(123, 151, 186, 0.35);
+  border-radius: 16px;
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color 200ms ease,
+    background 200ms ease,
+    transform 150ms ease;
+  background: rgba(11, 22, 36, 0.35);
+}
+
+.hacker-dropzone:hover {
+  border-color: rgba(95, 168, 211, 0.55);
+  background: rgba(95, 168, 211, 0.06);
+}
+
+.hacker-dropzone:focus {
+  outline: none;
+  border-color: rgba(95, 168, 211, 0.7);
+}
+
+.hacker-dropzone-active {
+  border-color: rgba(95, 168, 211, 0.8);
+  background: rgba(95, 168, 211, 0.1);
+  transform: scale(1.01);
+}
+
+.hacker-dropzone-loading {
+  border-color: rgba(208, 167, 111, 0.5);
+  background: rgba(208, 167, 111, 0.07);
+  cursor: wait;
+}
+
+.hacker-dropzone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.hacker-dropzone-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+/* Spinner */
+.hacker-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(208, 167, 111, 0.25);
+  border-top-color: var(--accent-2);
+  border-radius: 50%;
+  animation: hacker-spin 700ms linear infinite;
+}
+
+@keyframes hacker-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Crypto results */
+.hacker-crypto-results {
+  background: rgba(11, 22, 36, 0.55);
+  border: 1px solid rgba(95, 168, 211, 0.2);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hacker-crypto-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.03em;
+}
+
+.hacker-crypto-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse-dot 1.8s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.75); }
+}
+
+.hacker-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Stake pill */
+.hacker-stake-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(208, 167, 111, 0.1);
+  border: 1px solid rgba(208, 167, 111, 0.25);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+/* Stake confirm box */
+.hacker-stake-confirm {
+  background: rgba(11, 22, 36, 0.55);
+  border: 1px solid rgba(208, 167, 111, 0.22);
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Receipt textarea */
+.hacker-receipt-input {
+  box-sizing: border-box;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  padding: 10px 12px;
+}
+
+/* Reward card */
+.hacker-reward-card {
+  background: rgba(95, 168, 211, 0.08);
+  border: 1px solid rgba(95, 168, 211, 0.22);
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Responsive hacker */
+@media (max-width: 700px) {
+  .hacker-wrap {
+    gap: 14px;
+  }
+
+  .hacker-step {
+    padding: 18px 16px;
+  }
+
+  .hacker-header {
+    padding: 20px 16px 18px;
+  }
+
+  .hacker-input-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+:root[data-theme='executive-light'] .hacker-dropzone {
+  background: rgba(246, 250, 255, 0.5);
+  border-color: rgba(104, 128, 155, 0.35);
+}
+
+:root[data-theme='executive-light'] .hacker-dropzone:hover {
+  background: rgba(74, 124, 170, 0.07);
+  border-color: rgba(74, 124, 170, 0.5);
+}
+
+:root[data-theme='executive-light'] .hacker-bounty-card,
+:root[data-theme='executive-light'] .hacker-crypto-results,
+:root[data-theme='executive-light'] .hacker-stake-confirm {
+  background: rgba(246, 250, 255, 0.72);
+  border-color: rgba(104, 128, 155, 0.22);
+}
+

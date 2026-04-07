@@ -1,67 +1,69 @@
 'use client'
 
 import { useState } from 'react'
-import { useAccount, useConnect, useDisconnect, useChainId } from 'wagmi'
-import { generateECIESKeyPair, type ECIESKeyPair } from '@/lib/ecies'
+import { useAccount, useConnect, useDisconnect, useChainId, usePublicClient } from 'wagmi'
+import { decodeFunctionData } from 'viem'
+import { generateECIESKeyPair, decryptPayload, type ECIESKeyPair } from '@/lib/ecies'
 import { uploadWASM, uploadDualBitmap, computeFileCID, computeBytesCID } from '@/lib/ipfs'
 import useZTBContract from '@/hooks/useZTBContract'
-import { parseUnits, formatUnits } from 'viem'
-import { type Domain, type VerificationMode, DOMAIN_LABELS, MODE_LABELS } from '@/lib/abi/ZTBEscrow.abi'
+import { ZTB_ESCROW_ABI, type Domain, type VerificationMode, DOMAIN_LABELS, MODE_LABELS } from '@/lib/abi/ZTBEscrow.abi'
 
 // ── Types ─────────────────────────────────────────────────────
 
 interface FinancialConfig {
   authorizedIndices: number[]   // max 8 indices
-  maxDeltaPct:       number     // max 20%
+  maxDeltaPct: number     // max 20%
 }
 
 interface SponsorState {
   // Étape 1 — WASM
-  wasmFile:       File | null
-  wasmCID:        string
-  wasmIPFSUrl:    string
-  wasmUploading:  boolean
+  wasmFile: File | null
+  wasmCID: string
+  wasmIPFSUrl: string
+  wasmUploading: boolean
 
   // Étape 2 — Dual bitmap
-  bitmapAFile:    File | null
-  bitmapBFile:    File | null
-  bitmapACID:     string
-  bitmapBCID:     string
+  bitmapAFile: File | null
+  bitmapBFile: File | null
+  bitmapACID: string
+  bitmapBCID: string
   bitmapACoverage: number
   bitmapBCoverage: number
   bitmapUploading: boolean
 
   // Étape 3 — Config
-  domain:         Domain
-  mode:           VerificationMode
+  domain: Domain
+  mode: VerificationMode
   financialConfig: FinancialConfig
 
   // Étape 4 — ECIES
-  keyPair:        ECIESKeyPair | null
-  keySaved:       boolean
+  keyPair: ECIESKeyPair | null
+  keySaved: boolean
 
   // Étape 5 — Reward
-  rewardUsdt:     string
+  rewardUsdt: string
   rewardFloorUsdt: string
 
   // Étape 6 — Tx
-  txHash:         string
-  txStatus:       'idle' | 'pending' | 'success' | 'error'
-  txError:        string
+  txHash: string
+  txStatus: 'idle' | 'pending' | 'success' | 'error'
+  txError: string
 }
 
 // ── Composant principal ───────────────────────────────────────
 
 export default function SponsorPage() {
   const { address, isConnected } = useAccount()
-  const { connect, connectors }  = useConnect()
-  const { disconnect }           = useDisconnect()
-  const chainId                  = useChainId()
-  const isOnSepolia              = chainId === 11155111
+  const { connect, connectors } = useConnect()
+  const { disconnect } = useDisconnect()
+  const chainId = useChainId()
+  const isOnSepolia = chainId === 11155111
   const metaMaskConnector =
     connectors.find(c => c.name.toLowerCase().includes('metamask')) ?? connectors[0]
 
   const { createBounty, isPending, isSuccess, isError, error, txHash } = useZTBContract()
+
+  const [activeTab, setActiveTab] = useState<'create' | 'decrypt'>('create')
 
   const [state, setState] = useState<SponsorState>({
     wasmFile: null, wasmCID: '', wasmIPFSUrl: '', wasmUploading: false,
@@ -89,14 +91,14 @@ export default function SponsorPage() {
     setState(s => ({ ...s, wasmFile: file, wasmUploading: true }))
     setGlobalError(null)
     try {
-      const [result, cid] = await Promise.all([
+      const [{ url }, cid] = await Promise.all([
         uploadWASM(file),
         computeFileCID(file),
       ])
       setState(s => ({
         ...s,
         wasmCID: cid,
-        wasmIPFSUrl: result.url,
+        wasmIPFSUrl: url,
         wasmUploading: false,
       }))
     } catch (e) {
@@ -135,7 +137,7 @@ export default function SponsorPage() {
         state.bitmapAFile.arrayBuffer().then(b => new Uint8Array(b)),
         state.bitmapBFile.arrayBuffer().then(b => new Uint8Array(b)),
       ])
-      const [result, cidA, cidB] = await Promise.all([
+      const [, cidA, cidB] = await Promise.all([
         uploadDualBitmap(bytesA, bytesB),
         computeBytesCID(bytesA),
         computeBytesCID(bytesB),
@@ -166,9 +168,9 @@ export default function SponsorPage() {
   function handleDownloadKey() {
     if (!state.keyPair) return
     const blob = new Blob([state.keyPair.privateKeyHex], { type: 'text/plain' })
-    const url  = URL.createObjectURL(blob)
-    const a    = document.createElement('a')
-    a.href     = url
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
     a.download = 'ztb_private_key.txt'
     a.click()
     URL.revokeObjectURL(url)
@@ -189,28 +191,28 @@ export default function SponsorPage() {
   async function handleCreateBounty() {
     setGlobalError(null)
 
-    if (!state.wasmCID)          return setGlobalError('Uploadez le WASM d\'abord')
-    if (!state.bitmapACID)       return setGlobalError('Uploadez les bitmaps d\'abord')
-    if (!state.keyPair)          return setGlobalError('Générez la clé ECIES d\'abord')
-    if (!state.keySaved)         return setGlobalError('Téléchargez la clé privée d\'abord')
-    if (!state.rewardUsdt)       return setGlobalError('Définissez la récompense USDT')
+    if (!state.wasmCID) return setGlobalError('Uploadez le WASM d\'abord')
+    if (!state.bitmapACID) return setGlobalError('Uploadez les bitmaps d\'abord')
+    if (!state.keyPair) return setGlobalError('Générez la clé ECIES d\'abord')
+    if (!state.keySaved) return setGlobalError('Téléchargez la clé privée d\'abord')
+    if (!state.rewardUsdt) return setGlobalError('Définissez la récompense USDT')
 
     try {
       await createBounty({
-        targetCID:           state.wasmCID as `0x${string}`,
-        staticPropsHash:     '0x' + '0'.repeat(64) as `0x${string}`, // Youssef livrera
+        targetCID: state.wasmCID as `0x${string}`,
+        staticPropsHash: '0x' + '0'.repeat(64) as `0x${string}`, // Youssef livrera
         baselineMerkleRootA: '0x' + '0'.repeat(64) as `0x${string}`, // Youssef livrera
         baselineMerkleRootB: '0x' + '0'.repeat(64) as `0x${string}`, // Youssef livrera
-        baselineHashA:       state.bitmapACID as `0x${string}`,
-        baselineHashB:       state.bitmapBCID as `0x${string}`,
+        baselineHashA: state.bitmapACID as `0x${string}`,
+        baselineHashB: state.bitmapBCID as `0x${string}`,
         financialConfigHash: '0x' + '0'.repeat(64) as `0x${string}`, // calculé localement
-        domain:              state.domain,
-        mode:                state.mode,
-        extractionReceipt:   '0x' as `0x${string}`,                  // Youssef livrera
-        maxSteps:            1000000n,
-        eciesPublicKey:      state.keyPair.publicKeyHex as `0x${string}`,
-        rewardUsdt:          state.rewardUsdt,
-        rewardFloorUsdt:     state.rewardFloorUsdt || state.rewardUsdt,
+        domain: state.domain,
+        mode: state.mode,
+        extractionReceipt: '0x' as `0x${string}`,                  // Youssef livrera
+        maxSteps: 1000000n,
+        eciesPublicKey: state.keyPair.publicKeyHex as `0x${string}`,
+        rewardUsdt: state.rewardUsdt,
+        rewardFloorUsdt: state.rewardFloorUsdt || state.rewardUsdt,
       })
     } catch (e) {
       setGlobalError('createBounty échoué : ' + String(e))
@@ -235,7 +237,7 @@ export default function SponsorPage() {
   const step3Done = true // toujours une valeur par défaut
   const step4Done = !!state.keyPair && state.keySaved
   const step5Done = !!state.rewardUsdt
-  const allDone   = step1Done && step2Done && step3Done && step4Done && step5Done
+  const allDone = step1Done && step2Done && step3Done && step4Done && step5Done
 
   // ── Render ────────────────────────────────────────────────
 
@@ -243,27 +245,37 @@ export default function SponsorPage() {
     <main className="app-shell">
       <div className="sponsor-wrap">
 
-        {/* Header */}
-        <header className="glass-panel stagger-in sponsor-header">
-          <div className="sponsor-header-top">
-            <h1 className="hero-title title-gradient sponsor-title">
-              Interface Sponsor
-            </h1>
-            <span className="status-chip ok">V4.3 · Sepolia</span>
-          </div>
-          <p className="muted sponsor-subtitle">
-            Créez un bounty décentralisé — verrouillez vos USDT, recevez les exploits chiffrés.
+        <header className="glass-panel stagger-in">
+          <h1 className="hero-title title-gradient">Portail Sponsor</h1>
+          <p className="muted" style={{ marginBottom: 16 }}>
+            Créez des bounties Zero-Trust, paramétrez vos récompenses et déchiffrez les exploits résolus.
           </p>
+          <div style={{ display: 'flex', gap: 12, borderBottom: '1px solid #334155', paddingBottom: 16 }}>
+            <button 
+              onClick={() => setActiveTab('create')}
+              className={`app-btn ${activeTab === 'create' ? 'primary' : 'secondary'}`}
+            >
+              ➕ Créer un Bounty
+            </button>
+            <button 
+              onClick={() => setActiveTab('decrypt')}
+              className={`app-btn ${activeTab === 'decrypt' ? 'primary' : 'secondary'}`}
+            >
+              🔓 Décoder un Exploit
+            </button>
+          </div>
         </header>
 
-        {/* Erreur globale */}
-        {globalError && (
-          <div className="glass-panel stagger-in" style={{ padding: '14px 20px', borderColor: 'rgba(199,116,116,0.4)' }}>
-            <p className="error-note">⚠️ {globalError}</p>
-          </div>
-        )}
+        {activeTab === 'create' && (
+          <>
+            {/* Erreur globale */}
+            {globalError && (
+              <div className="glass-panel stagger-in" style={{ padding: '14px 20px', borderColor: 'rgba(199,116,116,0.4)' }}>
+                <p className="error-note">⚠️ {globalError}</p>
+              </div>
+            )}
 
-        {/* ── Étape 0 — Wallet ── */}
+            {/* ── Étape 0 — Wallet ── */}
         <section className="glass-panel stagger-in sponsor-step">
           <p className="step-title">Étape 1 — Connexion Wallet</p>
           {isConnected ? (
@@ -557,12 +569,12 @@ export default function SponsorPage() {
 
               {/* Récapitulatif */}
               <div style={{ background: 'rgba(11,22,36,0.5)', borderRadius: 12, padding: '14px 16px', marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <RecapRow label="WASM"     value={step1Done ? '✅ Uploadé' : '❌ Manquant'} ok={step1Done} />
-                <RecapRow label="Bitmaps"  value={step2Done ? '✅ A + B uploadés' : '❌ Manquants'} ok={step2Done} />
-                <RecapRow label="Domaine"  value={DOMAIN_LABELS[state.domain]} ok />
-                <RecapRow label="Mode"     value={state.mode === 0 ? 'STRICT' : 'RELAXED'} ok />
-                <RecapRow label="ECIES"    value={step4Done ? '✅ Clé sauvegardée' : state.keyPair ? '⚠️ Clé non sauvegardée' : '❌ Manquante'} ok={step4Done} />
-                <RecapRow label="Reward"   value={state.rewardUsdt ? `${state.rewardUsdt} USDT` : '❌ Manquant'} ok={!!state.rewardUsdt} />
+                <RecapRow label="WASM" value={step1Done ? '✅ Uploadé' : '❌ Manquant'} ok={step1Done} />
+                <RecapRow label="Bitmaps" value={step2Done ? '✅ A + B uploadés' : '❌ Manquants'} ok={step2Done} />
+                <RecapRow label="Domaine" value={DOMAIN_LABELS[state.domain]} ok />
+                <RecapRow label="Mode" value={state.mode === 0 ? 'STRICT' : 'RELAXED'} ok />
+                <RecapRow label="ECIES" value={step4Done ? '✅ Clé sauvegardée' : state.keyPair ? '⚠️ Clé non sauvegardée' : '❌ Manquante'} ok={step4Done} />
+                <RecapRow label="Reward" value={state.rewardUsdt ? `${state.rewardUsdt} USDT` : '❌ Manquant'} ok={!!state.rewardUsdt} />
               </div>
 
               <button
@@ -602,16 +614,148 @@ export default function SponsorPage() {
 
           </>
         )}
-
-        {/* Mauvais réseau */}
-        {isConnected && !isOnSepolia && (
-          <div className="glass-panel stagger-in network-warning">
-            Changez vers le réseau <strong>Sepolia</strong> dans MetaMask pour continuer
-          </div>
+        </>
+        )}
+        
+        {activeTab === 'decrypt' && (
+          <DecryptPanel />
         )}
 
       </div>
     </main>
+  )
+}
+
+function DecryptPanel() {
+  const publicClient = usePublicClient()
+  const [decodeTxHash, setDecodeTxHash] = useState('')
+  const [privateKeyFile, setPrivateKeyFile] = useState<File | null>(null)
+  const [status, setStatus] = useState<string>('')
+  const [decryptedJson, setDecryptedJson] = useState<string>('')
+
+  async function handleDecrypt() {
+    if (!publicClient) {
+      setStatus('🔌 Erreur : Client Wagmi non connecté. Assurez-vous d\'avoir MetaMask connecté et d\'être sur Sepolia.')
+      return
+    }
+    if (!decodeTxHash || !privateKeyFile) {
+      setStatus('⚠️ Veuillez fournir le Transaction Hash et le fichier de clé privée.')
+      return
+    }
+
+    try {
+      setDecryptedJson('')
+      setStatus('⏳ Lecture de la transaction sur la Blockchain...')
+      
+      const hashFormat = decodeTxHash.trim().startsWith('0x') ? decodeTxHash.trim() : `0x${decodeTxHash.trim()}`
+      const tx = await publicClient.getTransaction({ hash: hashFormat as `0x${string}` })
+      
+      if (!tx || !tx.input) {
+        throw new Error("Transaction introuvable ou Payload Input Data vide.")
+      }
+
+      setStatus('⏳ Extraction du payload crypté ("decodeFunctionData")...')
+      
+      let decoded
+      try {
+        decoded = decodeFunctionData({
+          abi: ZTB_ESCROW_ABI,
+          data: tx.input,
+        })
+      } catch (e) {
+        throw new Error("Impossible de décoder les données de la transaction avec l'ABI de ZTB. Êtes-vous sûr qu'il s'agit bien d'une transaction de soumission (submitProof) ?")
+      }
+
+      if (decoded.functionName !== 'submitProof') {
+        throw new Error(`La transaction n'est pas un appel à 'submitProof' (Trouvé: ${decoded.functionName})`)
+      }
+
+      const argsArray = decoded.args as unknown as any[]
+      const encryptedHex = argsArray[2] as string
+
+      if (!encryptedHex || typeof encryptedHex !== 'string' || !encryptedHex.startsWith('0x')) {
+         throw new Error("Impossible de trouver le 'encryptedPayload' dans la transaction.")
+      }
+
+      setStatus('🔐 Déchiffrement ECIES en cours...')
+      const privKeyText = await privateKeyFile.text()
+      const privKeyHex = privKeyText.trim()
+
+      const plainBytes = await decryptPayload(encryptedHex, privKeyHex)
+      const plainText = new TextDecoder().decode(plainBytes)
+
+      try {
+        const jsonObj = JSON.parse(plainText)
+        setDecryptedJson(JSON.stringify(jsonObj, null, 2))
+        setStatus('✅ Déchiffrement réussi ! La faille est visible ci-dessous.')
+      } catch {
+        setDecryptedJson(plainText)
+        setStatus('✅ Déchiffrement réussi ! (Format texte brut).')
+      }
+    } catch (e) {
+       console.error(e)
+       setStatus(`❌ Erreur : ${String(e)}`)
+    }
+  }
+
+  return (
+    <section className="glass-panel stagger-in delay-1 sponsor-step">
+      <p className="step-title">Étape 1 — Localiser l'Attaque</p>
+      <p className="muted" style={{ marginBottom: 12 }}>
+        Saisissez le « Tx Hash » de la transaction Ethereum par laquelle le Hacker a soumis sa preuve sur Sepolia.
+      </p>
+      <input
+        type="text"
+        className="styled-input mono-box"
+        placeholder="0xabc123...def456"
+        value={decodeTxHash}
+        onChange={(e) => setDecodeTxHash(e.target.value)}
+        style={{ width: '100%', marginBottom: 24, padding: '12px 16px', borderRadius: 8, border: '1px solid #3b82f6', background: '#0f172a', color: '#60a5fa' }}
+      />
+
+      <p className="step-title">Étape 2 — Fournir votre clé d'hôte ECIES</p>
+      <p className="muted" style={{ marginBottom: 12 }}>
+        Uploadez votre fichier <span className="mono-box" style={{ padding: '2px 6px', fontSize: '0.8rem' }}>ztb_private_key.txt</span> téléchargé lors de la création du bounty. Sans cette clé, aucune donnée ne peut être lue.
+      </p>
+      
+      <label className="app-btn secondary fit-content" style={{ cursor: 'pointer', display: 'inline-block', marginBottom: 24 }}>
+        {privateKeyFile ? `✅ Fichier lu : ${privateKeyFile.name}` : '🔑 Choisir la clé secrète (.txt / .hex)'}
+        <input
+          type="file"
+          accept=".txt,.hex"
+          onChange={(e) => setPrivateKeyFile(e.target.files?.[0] || null)}
+          style={{ display: 'none' }}
+        />
+      </label>
+
+      <div style={{ marginBottom: 24 }}>
+        <button
+          onClick={handleDecrypt}
+          disabled={!decodeTxHash || !privateKeyFile}
+          className="app-btn primary fit-content"
+          style={{ width: '100%', maxWidth: '300px' }}
+        >
+          Déchiffrer le Payload
+        </button>
+      </div>
+
+      {status && (
+        <div className={`glass-panel status-banner ${status.includes('❌') ? 'bad' : 'ok'}`} style={{ padding: '12px 16px', marginBottom: 24, border: '1px solid rgba(255,255,255,0.1)' }}>
+          {status}
+        </div>
+      )}
+
+      {decryptedJson && (
+        <div className="glass-panel" style={{ padding: 0, overflow: 'hidden', border: '1px solid #4ade80' }}>
+          <div style={{ background: 'rgba(74,222,128,0.1)', padding: '12px 16px', borderBottom: '1px solid rgba(74,222,128,0.2)', fontWeight: "bold", color: "#4ade80" }}>
+            🎯 Contenu Intégral de la Faille
+          </div>
+          <pre className="mono-box" style={{ background: '#064e3b', padding: 16, margin: 0, overflowX: 'auto', color: '#a7f3d0', fontSize: '0.9rem', lineHeight: '1.5' }}>
+            {decryptedJson}
+          </pre>
+        </div>
+      )}
+    </section>
   )
 }
 

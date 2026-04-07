@@ -170,7 +170,7 @@ export function useBounty(bountyId: bigint) {
     abi:          ZTB_ESCROW_ABI,
     functionName: 'bounties',
     args:         [bountyId],
-    query: { enabled: bountyId >= 0n },
+    query: { enabled: bountyId >= BigInt(0) },
   })
 }
 
@@ -196,7 +196,7 @@ export function useRequiredStake(
     abi:          ZTB_ESCROW_ABI,
     functionName: 'computeRequiredStake',
     args:         [hacker, bountyId, payloadLength],
-    query: { enabled: !!hacker && bountyId >= 0n },
+    query: { enabled: !!hacker && bountyId >= BigInt(0) },
   })
 }
 
