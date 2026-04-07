@@ -15,7 +15,7 @@ import {
 // Remplacer quand Ammar déploie sur Sepolia
 const ESCROW_ADDRESS = (
   process.env.NEXT_PUBLIC_ESCROW_ADDRESS
-  ?? '0x0000000000000000000000000000000000000000'
+  ?? '0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e'
 ) as `0x${string}`
 
 // ── Types ─────────────────────────────────────────────────────

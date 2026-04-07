@@ -60,7 +60,9 @@ export default function SponsorPage() {
   const { connect, connectors }  = useConnect()
   const { disconnect }           = useDisconnect()
   const chainId                  = useChainId()
-  const isOnSepolia              = chainId === 11155111
+  const TARGET_CHAIN_ID          = parseInt(process.env.NEXT_PUBLIC_CHAIN_ID ?? '31337')
+  const isOnCorrectChain         = chainId === TARGET_CHAIN_ID
+  const networkLabel             = TARGET_CHAIN_ID === 31337 ? 'Anvil Local' : 'Sepolia'
   const metaMaskConnector =
     connectors.find(c => c.name.toLowerCase().includes('metamask')) ?? connectors[0]
 
@@ -254,7 +256,7 @@ export default function SponsorPage() {
             <h1 className="hero-title title-gradient sponsor-title">
               Interface Sponsor
             </h1>
-            <span className="status-chip ok">V4.3 · Sepolia</span>
+            <span className="status-chip ok">V4.3 · {networkLabel}</span>
           </div>
           <p className="muted sponsor-subtitle">
             Créez un bounty décentralisé — verrouillez vos USDT, recevez les exploits chiffrés.
@@ -273,8 +275,8 @@ export default function SponsorPage() {
           <p className="step-title">Étape 1 — Connexion Wallet</p>
           {isConnected ? (
             <div className="sponsor-col">
-              <span className={`status-chip ${isOnSepolia ? 'ok' : 'bad'}`}>
-                {isOnSepolia ? '✅ Sepolia' : '❌ Passez sur Sepolia'}
+              <span className={`status-chip ${isOnCorrectChain ? 'ok' : 'bad'}`}>
+                {isOnCorrectChain ? `✅ ${networkLabel}` : `❌ Passez sur ${networkLabel}`}
               </span>
               <div className="mono-box address-text">{address}</div>
               <button onClick={() => disconnect()} className="app-btn danger fit-content">
@@ -292,7 +294,7 @@ export default function SponsorPage() {
           )}
         </section>
 
-        {isConnected && isOnSepolia && (
+        {isConnected && isOnCorrectChain && (
           <>
             {/* ── Étape 1 — WASM ── */}
             <section className="glass-panel stagger-in delay-1 sponsor-step">
@@ -587,7 +589,9 @@ export default function SponsorPage() {
                     Tx : {txHash}
                   </div>
                   <a
-                    href={`https://sepolia.etherscan.io/tx/${txHash}`}
+                    href={TARGET_CHAIN_ID === 31337
+                     ? `http://localhost:4000/tx/${txHash}`
+                     : `https://sepolia.etherscan.io/tx/${txHash}`}
                     target="_blank"
                     rel="noreferrer"
                     className="app-btn secondary fit-content"
@@ -609,9 +613,9 @@ export default function SponsorPage() {
         )}
 
         {/* Mauvais réseau */}
-        {isConnected && !isOnSepolia && (
+        {isConnected && !isOnCorrectChain && (
           <div className="glass-panel stagger-in network-warning">
-            Changez vers le réseau <strong>Sepolia</strong> dans MetaMask pour continuer
+            Changez vers le réseau <strong>{networkLabel}</strong> dans MetaMask pour continuer
           </div>
         )}
 

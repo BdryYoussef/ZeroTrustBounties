@@ -1,11 +1,14 @@
-import { createConfig, http, fallback } from 'wagmi'
-import { sepolia } from 'wagmi/chains'
-import { metaMask } from 'wagmi/connectors'
+// lib/wagmi.config.ts
+// Auto-patched for LOCAL DEMO by scripts/deploy.cjs — 2026-04-06T20:08:48.807Z
+import { createConfig, http } from 'wagmi'
+import { foundry } from 'wagmi/chains'
+import { metaMask, injected } from 'wagmi/connectors'
 
 export const config = createConfig({
-  chains: [sepolia],
+  chains: [foundry],
 
   connectors: [
+    injected(),
     metaMask({
       dappMetadata: {
         name: 'ZTB — Zero Trust Bounties',
@@ -15,10 +18,7 @@ export const config = createConfig({
   ],
 
   transports: {
-    [sepolia.id]: fallback([
-      http(process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL),
-      http('https://rpc.sepolia.org'),
-    ]),
+    [foundry.id]: http(process.env.NEXT_PUBLIC_RPC_URL ?? 'http://127.0.0.1:8545'),
   },
 
   ssr: false,

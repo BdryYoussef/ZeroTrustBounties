@@ -25,7 +25,7 @@ export default function Home() {
               Ouvrir l&apos;interface Sponsor
             </Link>
             <div className="app-btn secondary home-status">
-              Sepolia ready · Wallet connecte via MetaMask
+              Anvil Local ready · Wallet connecté via MetaMask
             </div>
           </div>
 
@@ -36,7 +36,7 @@ export default function Home() {
             </div>
             <div className="glass-panel home-card">
               <p className="muted home-card-label">Network</p>
-              <p className="home-card-value">Ethereum Sepolia</p>
+              <p className="home-card-value">Anvil Local</p>
             </div>
             <div className="glass-panel home-card">
               <p className="muted home-card-label">Cipher</p>
