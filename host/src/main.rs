@@ -189,13 +189,13 @@ fn build_env<'a>(
 
     ExecutorEnv::builder()
         // Private inputs
-        .write(target_bytes).unwrap()
+        .write(&target_bytes).unwrap()
         .write(&domain).unwrap()
         .write(&mode_val).unwrap()
-        .write(financial_config).unwrap()
-        .write(baseline_a_vec).unwrap()
-        .write(baseline_b_vec).unwrap()
-        .write(payload).unwrap()
+        .write(&financial_config).unwrap()
+        .write(&baseline_a_vec).unwrap()
+        .write(&baseline_b_vec).unwrap()
+        .write(&payload).unwrap()
         // Public commitments
         .write(&expected_cid).unwrap()
         .write(&expected_ph).unwrap()
@@ -297,7 +297,7 @@ async fn prove_bonsai(env: ExecutorEnv<'_>) -> Receipt {
 
     // Create a proving session with Groth16 SNARK requested
     let session = client
-        .create_session(image_id, input_id, vec![], true /* snark */)
+        .create_session(image_id, input_id, vec![])
         .expect("Failed to create Bonsai session");
 
     println!("    ✅ Session created (uuid: {})", session.uuid);
