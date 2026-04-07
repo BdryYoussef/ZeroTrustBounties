@@ -237,7 +237,7 @@ fn prove_local(env: ExecutorEnv) -> Receipt {
 
 // ─── Bonsai cloud proving path ────────────────────────────────────────────────
 #[tokio::main]
-async fn prove_bonsai(env: ExecutorEnv<'_>) -> Receipt {
+async fn prove_bonsai(_env: ExecutorEnv<'_>) -> Receipt {
     use bonsai_sdk::alpha as bonsai;
 
     println!("[2/3] Uploading to Bonsai for Groth16 SNARK generation...");
@@ -266,7 +266,7 @@ async fn prove_bonsai(env: ExecutorEnv<'_>) -> Receipt {
         // Re-build the env writing into a Vec<u8> — this is the stdin byte stream
         // Bonsai needs.  We rebuild rather than cloning because ExecutorEnv is not Clone.
         {
-            use risc0_zkvm::serde::to_vec;
+            // (to_vec import removed — placeholder path does not use it)
             // domain, mode_val etc. are captured via the outer function arguments
             // but prove_bonsai only receives a pre-built env; we must accept raw bytes.
             // Workaround: drive the executor and capture the internal segment stdin.
