@@ -9,13 +9,13 @@ path = "src/main.rs"
 
 [dependencies]
 # ── RISC Zero ─────────────────────────────────────────────────────────────────
-risc0-zkvm = { version = "1.1", features = ["std"] }
+risc0-zkvm = { version = "3.0", features = ["std"] }
 methods     = { path = "../methods" }
 
 # ── Bonsai cloud prover ───────────────────────────────────────────────────────
 # Activated at runtime via --prove-cloud flag.
 # Requires BONSAI_API_KEY + BONSAI_API_URL env vars.
-bonsai-sdk = { version = "0.7", features = ["async"] }
+bonsai-sdk = { version = "1.4" }
 tokio      = { version = "1",   features = ["rt-multi-thread", "macros", "time"] }
 
 # ── CLI ───────────────────────────────────────────────────────────────────────

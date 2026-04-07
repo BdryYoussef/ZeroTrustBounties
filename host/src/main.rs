@@ -238,12 +238,12 @@ fn prove_local(env: ExecutorEnv) -> Receipt {
 // ─── Bonsai cloud proving path ────────────────────────────────────────────────
 #[tokio::main]
 async fn prove_bonsai(_env: ExecutorEnv<'_>) -> Receipt {
-    use bonsai_sdk::alpha as bonsai;
+    use bonsai_sdk::blocking::Client as BonsaiClient;
 
     println!("[2/3] Uploading to Bonsai for Groth16 SNARK generation...");
 
     // Initialise client from environment (BONSAI_API_KEY + BONSAI_API_URL)
-    let client = bonsai::Client::from_env(risc0_zkvm::VERSION)
+    let client = BonsaiClient::from_env(risc0_zkvm::VERSION)
         .expect("Failed to init Bonsai client — check BONSAI_API_KEY and BONSAI_API_URL");
 
     // Upload the ELF image
@@ -297,7 +297,7 @@ async fn prove_bonsai(_env: ExecutorEnv<'_>) -> Receipt {
 
     // Create a proving session with Groth16 SNARK requested
     let session = client
-        .create_session(image_id, input_id, vec![])
+        .create_session(image_id, input_id, vec![], true)
         .expect("Failed to create Bonsai session");
 
     println!("    ✅ Session created (uuid: {})", session.uuid);
