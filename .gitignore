@@ -1,0 +1,16 @@
+# Runtime artifacts — never commit
+anvil.log
+anvil.pid
+zkvm.pid
+zkvm-demo.log
+
+# ECIES private keys generated during demo
+ztb_private_key.txt
+*.pem
+
+# Worktrees are tracked by their own branches — exclude from main
+ztb-frontend/
+ztb-zkvm/
+
+# OS
+.DS_Store
