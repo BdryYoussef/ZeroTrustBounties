@@ -35,12 +35,13 @@ export const ZTB_ESCROW_ABI = [
   },
 
   {
-    name: 'commitProof',
+    name: 'commit',
     type: 'function',
     stateMutability: 'payable',         // envoie ETH comme stake
     inputs: [
-      { name: 'bountyId',   type: 'uint256' },
-      { name: 'commitment', type: 'bytes32' }, // keccak256(address || sha256(payload) || nonce)
+      { name: 'bountyId',       type: 'uint256' },
+      { name: 'commitHash',     type: 'bytes32' }, // keccak256(address || sha256(payload) || nonce)
+      { name: 'payloadLength',  type: 'uint256' }, // pour calcul stake anti-DoS
     ],
     outputs: [],
   },
@@ -50,12 +51,12 @@ export const ZTB_ESCROW_ABI = [
     type: 'function',
     stateMutability: 'nonpayable',
     inputs: [
-      { name: 'bountyId',         type: 'uint256' },
-      { name: 'groth16Receipt',   type: 'bytes'   }, // receipt zkVM compressé
-      { name: 'encryptedPayload', type: 'bytes'   }, // payload chiffré ECIES
-      { name: 'payloadHash',      type: 'bytes32' }, // SHA256 du payload
-      { name: 'nonce',            type: 'uint256' }, // anti-replay
-      { name: 'payloadLength',    type: 'uint256' }, // pour calcul stake anti-DoS
+      { name: 'bountyId',         type: 'uint256' }, // arg 0
+      { name: 'payloadHash',      type: 'bytes32' }, // arg 1 — SHA256 du payload (INV-9)
+      { name: 'nonce',            type: 'uint256' }, // arg 2 — anti-replay
+      { name: 'groth16Receipt',   type: 'bytes'   }, // arg 3 — receipt zkVM compressé
+      { name: 'journal',          type: 'bytes'   }, // arg 4 — sortie brute du Guest (15 champs)
+      { name: 'encryptedPayload', type: 'string'  }, // arg 5 — payload chiffré ECIES
     ],
     outputs: [],
   },

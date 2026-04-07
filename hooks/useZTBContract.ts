@@ -40,16 +40,17 @@ export interface CreateBountyArgs {
 export interface CommitProofArgs {
   bountyId:      bigint
   commitment:    `0x${string}`  // keccak256(address || sha256(payload) || nonce)
-  stakeWei:      bigint         // calculé par computeStake()
+  payloadLength: bigint         // passé au contrat pour calcul du stake anti-DoS
+  stakeWei:      bigint         // ETH value envoyé avec la tx (msg.value)
 }
 
 export interface SubmitProofArgs {
   bountyId:         bigint
-  groth16Receipt:   `0x${string}`
-  encryptedPayload: `0x${string}`
-  payloadHash:      `0x${string}`
-  nonce:            bigint
-  payloadLength:    bigint
+  payloadHash:      `0x${string}`  // arg 1 — SHA256 du payload (INV-9)
+  nonce:            bigint          // arg 2 — anti-replay
+  groth16Receipt:   `0x${string}`  // arg 3 — seal Groth16
+  journal:          `0x${string}`  // arg 4 — sortie brute du Guest (15 champs encodés)
+  encryptedPayload: string          // arg 5 — payload chiffré ECIES (string calldata)
 }
 
 // ── Utilitaire — calculer le commitment ───────────────────────
@@ -124,9 +125,9 @@ export function useZTBContract() {
     return writeContract({
       address:      ESCROW_ADDRESS,
       abi:          ZTB_ESCROW_ABI,
-      functionName: 'commitProof',
-      args:         [args.bountyId, args.commitment],
-      value:        args.stakeWei,  // ETH envoyé avec la tx
+      functionName: 'commit',        // nom exact dans ZTBEscrow.sol
+      args:         [args.bountyId, args.commitment, args.payloadLength],
+      value:        args.stakeWei,   // ETH envoyé avec la tx
     })
   }
 
@@ -137,12 +138,12 @@ export function useZTBContract() {
       abi:          ZTB_ESCROW_ABI,
       functionName: 'submitProof',
       args: [
-        args.bountyId,
-        args.groth16Receipt,
-        args.encryptedPayload,
-        args.payloadHash,
-        args.nonce,
-        args.payloadLength,
+        args.bountyId,           // uint256
+        args.payloadHash,        // bytes32  — arg 1 (INV-9)
+        args.nonce,              // uint256  — arg 2
+        args.groth16Receipt,     // bytes    — arg 3
+        args.journal,            // bytes    — arg 4 (sortie Guest)
+        args.encryptedPayload,   // string   — arg 5
       ],
     })
   }
