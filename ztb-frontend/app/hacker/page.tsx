@@ -435,7 +435,6 @@ export default function HackerPage() {
                 </div>
               )}
 
-              </div>
               <div>
                 <p className="ztb-label mb-1.5">Nonce (auto-generated)</p>
                 <div className="mono-box mb-2" style={{ color: '#C9A853', fontSize: '0.72rem' }}>
