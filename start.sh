@@ -61,8 +61,9 @@ start_anvil() {
   local ANVIL_PORT=8545
 
   if lsof -i ":${ANVIL_PORT}" &>/dev/null || ss -tlnp | grep -q ":${ANVIL_PORT} "; then
-    ok "Anvil already running on port ${ANVIL_PORT}"
-    return 0
+    warn "Anvil already running on port ${ANVIL_PORT}. Restarting for a clean demo state..."
+    fuser -k "${ANVIL_PORT}/tcp" 2>/dev/null || true
+    sleep 1
   fi
 
   log "Starting Anvil (local EVM node) on port ${ANVIL_PORT}..."
@@ -172,10 +173,10 @@ start_frontend() {
   cd "${ZTB_FRONTEND}"
 
   local PORT=3000
-  if lsof -i ":${PORT}" &>/dev/null; then
-    warn "Port ${PORT} already in use — frontend may already be running"
-    return 0
-  fi
+
+  # Kill anything on port 3000 before starting
+  fuser -k 3000/tcp 2>/dev/null || lsof -ti :3000 | xargs kill -9 2>/dev/null || true
+  sleep 1
 
   log "Starting Next.js dev server on http://localhost:${PORT} ..."
   echo ""
