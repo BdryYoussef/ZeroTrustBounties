@@ -182,6 +182,138 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── Section 1.5: Protocol Documentation ── */}
+      <section className="py-28 bg-[#06080B]">
+        <div className="container mx-auto px-6 max-w-6xl">
+
+          {/* Header */}
+          <div className="flex flex-col items-center mb-16 text-center">
+            <span className="text-[10px] font-extrabold tracking-[0.25em] text-[#C9A853] uppercase mb-4">
+              Protocol Documentation
+            </span>
+            <h2 className="text-3xl md:text-5xl font-title font-bold mb-5 tracking-tight">
+              How ZTB Works
+            </h2>
+            <p className="text-gray-500 text-sm max-w-lg leading-relaxed">
+              A trustless, three-phase lifecycle secured by cryptographic proofs at every layer.
+            </p>
+          </div>
+
+          {/* 3-Column Card Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+
+            {/* Card 1 — Sponsors */}
+            <div className="group relative flex flex-col p-7 rounded-2xl bg-white/[0.02] border border-white/[0.07] backdrop-blur-sm overflow-hidden transition-all duration-500 hover:border-[#C9A853]/30 hover:-translate-y-1">
+              {/* Radial glow on hover */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
+                style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(201,168,83,0.1) 0%, transparent 70%)' }}
+              />
+              {/* Top border accent */}
+              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#C9A853]/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+              <div className="relative z-10 flex flex-col h-full">
+                {/* Icon */}
+                <div className="w-10 h-10 rounded-xl mb-5 flex items-center justify-center"
+                  style={{ background: 'rgba(201,168,83,0.08)', border: '1px solid rgba(201,168,83,0.2)' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C9A853" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                </div>
+
+                <span className="text-[9px] font-extrabold tracking-[0.2em] uppercase text-[#C9A853] mb-2">For Sponsors</span>
+                <h3 className="text-lg font-title font-bold text-white mb-3 tracking-tight">Secure Your Protocol</h3>
+                <p className="text-sm text-gray-500 leading-relaxed flex-grow">
+                  Upload your WASM and baseline paths. Our local ECIES generation ensures your private key never leaves your browser. Lock USDT in our escrow with zero human intermediaries.
+                </p>
+
+                <div className="mt-5 flex items-center gap-2 text-xs font-bold text-[#C9A853] opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
+                  Create Bounty
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2 — Hackers */}
+            <div className="group relative flex flex-col p-7 rounded-2xl bg-white/[0.02] border border-white/[0.07] backdrop-blur-sm overflow-hidden transition-all duration-500 hover:border-[#5FA8D3]/30 hover:-translate-y-1">
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
+                style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(95,168,211,0.1) 0%, transparent 70%)' }}
+              />
+              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#5FA8D3]/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+              <div className="relative z-10 flex flex-col h-full">
+                <div className="w-10 h-10 rounded-xl mb-5 flex items-center justify-center"
+                  style={{ background: 'rgba(95,168,211,0.08)', border: '1px solid rgba(95,168,211,0.2)' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5FA8D3" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                  </svg>
+                </div>
+
+                <span className="text-[9px] font-extrabold tracking-[0.2em] uppercase text-[#5FA8D3] mb-2">For Hackers</span>
+                <h3 className="text-lg font-title font-bold text-white mb-3 tracking-tight">Hunt &amp; Prove</h3>
+                <p className="text-sm text-gray-500 leading-relaxed flex-grow">
+                  Commit to a bounty to lock your 96h exclusive slot. Generate a Groth16 ZK proof locally using RISC Zero. Reveal your encrypted exploit and claim your reward instantly.
+                </p>
+
+                <div className="mt-5 flex items-center gap-2 text-xs font-bold text-[#5FA8D3] opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
+                  Start Hacking
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3 — Architecture */}
+            <div className="group relative flex flex-col p-7 rounded-2xl bg-white/[0.02] border border-white/[0.07] backdrop-blur-sm overflow-hidden transition-all duration-500 hover:border-[#4ADE80]/30 hover:-translate-y-1">
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
+                style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(74,222,128,0.08) 0%, transparent 70%)' }}
+              />
+              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#4ADE80]/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+              <div className="relative z-10 flex flex-col h-full">
+                <div className="w-10 h-10 rounded-xl mb-5 flex items-center justify-center"
+                  style={{ background: 'rgba(74,222,128,0.07)', border: '1px solid rgba(74,222,128,0.2)' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4ADE80" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/>
+                    <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 15h3M1 9h3M1 15h3"/>
+                  </svg>
+                </div>
+
+                <span className="text-[9px] font-extrabold tracking-[0.2em] uppercase text-[#4ADE80] mb-2">Architecture</span>
+                <h3 className="text-lg font-title font-bold text-white mb-3 tracking-tight">Tri-Layer ZK Oracle</h3>
+                <p className="text-sm text-gray-500 leading-relaxed flex-grow">
+                  ZTB V4.3 uses a floating-point-free zkVM, an AFL XOR-shift novelty oracle, and a 32-bit Knuth multiplicative hash to guarantee collision-free deterministic execution.
+                </p>
+
+                <div className="mt-5 flex items-center gap-2 text-xs font-bold text-[#4ADE80] opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
+                  View Architecture
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Ghost CTA */}
+          <div className="flex justify-center">
+            <button
+              disabled
+              className="inline-flex items-center gap-3 px-8 py-3 rounded-xl text-sm font-bold tracking-wide cursor-not-allowed opacity-40 transition-all"
+              style={{
+                border: '1px solid rgba(201,168,83,0.3)',
+                color: '#C9A853',
+                background: 'rgba(201,168,83,0.04)',
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+              </svg>
+              Read Full Whitepaper
+              <span className="text-[9px] font-extrabold tracking-widest opacity-60 uppercase">(Coming Soon)</span>
+            </button>
+          </div>
+
+        </div>
+      </section>
+
       {/* ── Section 2: Pioneers (3D Perspective Grid) ── */}
       <section className="relative py-32 bg-[#080A0F] overflow-hidden">
         {/* 3D Grid Background */}
