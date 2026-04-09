@@ -130,6 +130,37 @@ export function Navbar() {
         {/* ── Right controls — only rendered after client mount ── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, minWidth: 160, justifyContent: 'flex-end' }}>
 
+          {/* Sepolia Faucet link */}
+          <a
+            href="https://faucet.sepolia.io"
+            target="_blank"
+            rel="noreferrer"
+            title="Get Sepolia test ETH"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              padding: '5px 12px', borderRadius: 999,
+              fontSize: '0.72rem', fontWeight: 700,
+              background: 'rgba(95,168,211,0.07)',
+              border: '1px solid rgba(95,168,211,0.2)',
+              color: '#5FA8D3', textDecoration: 'none',
+              whiteSpace: 'nowrap', flexShrink: 0,
+              transition: 'all 200ms ease',
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.background = 'rgba(95,168,211,0.15)'
+              ;(e.currentTarget as HTMLElement).style.borderColor = 'rgba(95,168,211,0.4)'
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.background = 'rgba(95,168,211,0.07)'
+              ;(e.currentTarget as HTMLElement).style.borderColor = 'rgba(95,168,211,0.2)'
+            }}
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+            </svg>
+            Faucet
+          </a>
+
           {/* Theme toggle */}
           <button
             type="button"

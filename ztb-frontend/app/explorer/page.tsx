@@ -340,6 +340,85 @@ export default function ExplorerPage() {
           {ids.map(id => <BountyCard key={id.toString()} bountyId={id} />)}
         </div>
       )}
+
+      {/* ── Hall of Fame ── */}
+      <div className="mt-10 animate-fade-up-d3">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-white/10" />
+          <span className="text-[10px] font-extrabold tracking-[0.25em] uppercase" style={{ color: '#C9A853' }}>
+            🏆 Hall of Fame
+          </span>
+          <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-white/10" />
+        </div>
+
+        <div
+          className="rounded-2xl overflow-hidden"
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+        >
+          {/* Table header */}
+          <div
+            className="grid grid-cols-4 px-5 py-3 text-[10px] font-extrabold tracking-[0.15em] uppercase"
+            style={{ color: 'var(--muted)', borderBottom: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)' }}
+          >
+            <span>Rank</span>
+            <span>Hacker</span>
+            <span className="text-center">Critical Hits</span>
+            <span className="text-right">Total Earned</span>
+          </div>
+
+          {/* Rows */}
+          {[
+            { rank: 1, addr: '0x71C4...9A2F', hits: 23, earned: '$421,500', medal: '🥇', accent: '#C9A853', glow: 'rgba(201,168,83,0.07)' },
+            { rank: 2, addr: '0xB3f8...11D0', hits: 19, earned: '$287,200', medal: '🥈', accent: '#94A3B8', glow: 'rgba(148,163,184,0.06)' },
+            { rank: 3, addr: '0x4A2e...C9E1', hits: 14, earned: '$195,000', medal: '🥉', accent: '#CD7C3A', glow: 'rgba(205,124,58,0.06)' },
+            { rank: 4, addr: '0x99fA...3D72', hits: 11, earned: '$112,400', medal: null, accent: 'var(--muted-light)', glow: 'transparent' },
+            { rank: 5, addr: '0x2C1b...78A3', hits:  8, earned: '$88,100',  medal: null, accent: 'var(--muted-light)', glow: 'transparent' },
+          ].map(({ rank, addr, hits, earned, medal, accent, glow }) => (
+            <div
+              key={rank}
+              className="grid grid-cols-4 items-center px-5 py-4 transition-all duration-200 hover:bg-white/[0.02]"
+              style={{
+                borderBottom: rank < 5 ? '1px solid var(--border)' : 'none',
+                background: glow !== 'transparent' ? glow : undefined,
+              }}
+            >
+              {/* Rank */}
+              <div className="flex items-center gap-2">
+                {medal
+                  ? <span className="text-base leading-none">{medal}</span>
+                  : <span className="text-xs font-bold w-6 text-center" style={{ color: 'var(--muted)' }}>#{rank}</span>
+                }
+              </div>
+
+              {/* Address */}
+              <span className="font-mono text-xs font-semibold" style={{ color: accent }}>
+                {addr}
+              </span>
+
+              {/* Hits */}
+              <div className="flex justify-center">
+                <span
+                  className="px-2.5 py-0.5 rounded-full text-[10px] font-bold"
+                  style={{
+                    background: `${accent}15`,
+                    border: `1px solid ${accent}30`,
+                    color: accent,
+                  }}
+                >
+                  {hits} crits
+                </span>
+              </div>
+
+              {/* Earned */}
+              <span className="text-right text-sm font-bold font-title" style={{ color: accent }}>
+                {earned}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
     </main>
   )
 }

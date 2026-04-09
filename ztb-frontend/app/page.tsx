@@ -182,6 +182,38 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── Analytics Bar ── */}
+      <div className="relative z-10 border-y border-white/[0.06] bg-white/[0.02] backdrop-blur-md">
+        <div className="container mx-auto px-6 max-w-6xl">
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/[0.06]">
+            {[
+              { label: 'TVL Secured',         value: '$12.4M',  accent: '#C9A853', icon: '◈' },
+              { label: 'Bounties Paid',        value: '$3.1M',   accent: '#4ADE80', icon: '◎' },
+              { label: '0-Days Patched',       value: '142',     accent: '#5FA8D3', icon: '◉' },
+              { label: 'Active Whitehats',     value: '8,405',   accent: '#C9A853', icon: '◆' },
+            ].map(({ label, value, accent, icon }) => (
+              <div
+                key={label}
+                className="flex flex-col items-center justify-center py-6 px-4 gap-1 group hover:bg-white/[0.02] transition-all duration-300"
+              >
+                <span className="text-[10px] font-extrabold tracking-[0.15em] uppercase mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                  {label}
+                </span>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-xs" style={{ color: `${accent}60` }}>{icon}</span>
+                  <span
+                    className="font-title font-black text-2xl md:text-3xl tracking-tighter transition-all duration-300 group-hover:scale-105"
+                    style={{ color: accent }}
+                  >
+                    {value}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* ── Section 1.5: Protocol Documentation ── */}
       <section className="py-28 bg-[#06080B]">
         <div className="container mx-auto px-6 max-w-6xl">
