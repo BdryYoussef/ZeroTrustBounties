@@ -222,6 +222,13 @@ export default function HackerPage() {
   async function handleSubmit() {
     if (!proofData || !payloadFile || !payloadHash || !bountyNum || !bountyData) return
     setSubmitError('')
+
+    // TASK 4 — Novelty guard: reject proof if no exploit vector is proven
+    if (!proofData.c1a && !proofData.c2) {
+      setSubmitError('Proof rejected: No novelty conditions met (c1a and c2 are both false). The ZK guest did not detect an exploit vector. Regenerate your proof.')
+      return
+    }
+
     setSubmitting(true)
     try {
       setSubmitStep('Reading payload…')
@@ -376,6 +383,58 @@ export default function HackerPage() {
                 {bountyNum !== null && !bountyData && (
                   <p className="error-note mt-1.5">Bounty not found</p>
                 )}
+              </div>
+
+              {/* TASK 5 — Download Target Environment */}
+              {bountyNum !== null && bountyValid && bountyData && (
+                <div
+                  className="mt-3 rounded-xl p-4 space-y-3"
+                  style={{
+                    background: 'rgba(95,168,211,0.05)',
+                    border: '1px solid rgba(95,168,211,0.25)',
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-sm mb-0.5" style={{ color: '#5FA8D3' }}>
+                        ⬇️ Download Target Environment
+                      </p>
+                      <p className="text-xs" style={{ color: 'var(--muted)' }}>WASM binary + baseline bitmaps — required to run the local prover</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {[
+                      { label: 'Target WASM',          cid: (bountyData[0] as string), filename: `target_${bountyId}.wasm` },
+                      { label: 'Baseline A (AFL XOR)',  cid: (bountyData[4] as string), filename: `baseline_a_${bountyId}.bin` },
+                      { label: 'Baseline B (Knuth)',    cid: (bountyData[5] as string), filename: `baseline_b_${bountyId}.bin` },
+                    ].map(({ label, cid, filename }) => {
+                      const gateway = process.env.NEXT_PUBLIC_PINATA_GATEWAY ?? 'https://gateway.pinata.cloud'
+                      const url = `${gateway}/ipfs/${cid}`
+                      return (
+                        <div key={label} className="flex items-center justify-between gap-3 flex-wrap">
+                          <span className="text-xs" style={{ color: 'var(--muted-light)' }}>{label}</span>
+                          <a
+                            href={url}
+                            download={filename}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs font-mono px-3 py-1 rounded-lg transition-all hover:opacity-80"
+                            style={{
+                              color: '#5FA8D3',
+                              background: 'rgba(95,168,211,0.08)',
+                              border: '1px solid rgba(95,168,211,0.2)',
+                              textDecoration: 'none',
+                            }}
+                          >
+                            {String(cid).slice(0, 14)}… ↗
+                          </a>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
               </div>
               <div>
                 <p className="ztb-label mb-1.5">Nonce (auto-generated)</p>

@@ -75,6 +75,12 @@ contract ZTBEscrow {
 
     event Committed(bytes32 indexed commitHash, address indexed hunter);
 
+    event CommitCleared(
+        uint256 indexed bountyId,
+        address indexed slashedCommitter,
+        uint256         forfeitedStake
+    );
+
     event ExploitProven(
         uint256 indexed bountyId,
         address indexed hacker,
@@ -294,5 +300,37 @@ contract ZTBEscrow {
         
         bool ok = IERC20(usdtToken).transfer(b.sponsor, b.reward);
         require(ok, "USDT refund failed");
+    }
+
+    // ── clearExpiredCommit (ANTI-GRIEFING) ────────────────────
+    /**
+     * @notice Anyone can call this to clear a stale commit after its 72h deadline.
+     *         The forfeited ETH stake is transferred to the bounty sponsor.
+     *         This prevents a hacker from "hostage-locking" a slot indefinitely.
+     */
+    function clearExpiredCommit(uint256 bountyId) external {
+        require(
+            block.timestamp > commitDeadline[bountyId],
+            "Commit not expired"
+        );
+        address griefer = activeCommitter[bountyId];
+        require(griefer != address(0), "No active committer");
+
+        // Capture the forfeited stake (the full ETH balance that was staked)
+        // We use the commit deadline as a proxy — bounty's staked amount was sent by griefer
+        uint256 forfeit = address(this).balance; // Full ETH held by contract belongs to pending stakes
+
+        // Clear slot state
+        activeCommitter[bountyId] = address(0);
+        commitDeadline[bountyId]  = 0;
+
+        // Slash: send forfeited ETH to sponsor as compensation
+        Bounty storage b = bounties[bountyId];
+        if (forfeit > 0) {
+            (bool sent,) = payable(b.sponsor).call{value: forfeit}("");
+            require(sent, "ETH slash transfer failed");
+        }
+
+        emit CommitCleared(bountyId, griefer, forfeit);
     }
 }

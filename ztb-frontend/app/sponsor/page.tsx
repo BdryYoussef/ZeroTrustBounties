@@ -196,31 +196,33 @@ export default function SponsorPage() {
     setState(s => ({ ...s, bitmapUploading: true }))
     setGlobalError(null)
     try {
+      // Step 1: Read both files into memory (parallel is fine here — no network involved)
       const [bytesA, bytesB] = await Promise.all([
         state.bitmapAFile.arrayBuffer().then(b => new Uint8Array(b)),
         state.bitmapBFile.arrayBuffer().then(b => new Uint8Array(b)),
       ])
-      const [, cidA, cidB] = await Promise.all([
-        uploadDualBitmap(bytesA, bytesB),
-        computeBytesCID(bytesA),
-        computeBytesCID(bytesB),
-      ])
+
+      // Step 2: Upload sequentially with internal 600ms debounce (TASK 3 fix)
+      // uploadDualBitmap already handles the debounce internally — do NOT wrap in Promise.all
+      const uploadResult = await uploadDualBitmap(bytesA, bytesB)
+
+      // Step 3: Compute on-chain CID hashes locally (pure CPU, no network)
       const [hashABuffer, hashBBuffer] = await Promise.all([
         crypto.subtle.digest('SHA-256', bytesA),
         crypto.subtle.digest('SHA-256', bytesB),
       ])
-      
+
       const bufToHex = (b: ArrayBuffer) => '0x' + Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join('')
       const hexA = bufToHex(hashABuffer)
       const hexB = bufToHex(hashBBuffer)
 
-      setState(s => ({ 
-        ...s, 
-        bitmapACID: cidA, 
-        bitmapBCID: cidB, 
-        bitmapAHash: hexA, 
-        bitmapBHash: hexB, 
-        bitmapUploading: false 
+      setState(s => ({
+        ...s,
+        bitmapACID: uploadResult.cidA,
+        bitmapBCID: uploadResult.cidB,
+        bitmapAHash: hexA,
+        bitmapBHash: hexB,
+        bitmapUploading: false
       }))
     } catch (e) {
       setGlobalError('Bitmap upload failed: ' + String(e))
@@ -236,11 +238,11 @@ export default function SponsorPage() {
 
   function handleDownloadKey() {
     if (!state.keyPair) return
+    const pemContent = `-----BEGIN ZTB PRIVATE KEY-----\n${state.keyPair.privateKeyHex}\n-----END ZTB PRIVATE KEY-----`
     const a   = document.createElement('a')
-    a.href    = URL.createObjectURL(new Blob([state.keyPair.privateKeyHex], { type: 'text/plain' }))
-    a.download = 'ztb_private_key.txt'
+    a.href    = URL.createObjectURL(new Blob([pemContent], { type: 'application/x-pem-file' }))
+    a.download = 'ztb_private_key.pem'
     a.click()
-    setState(s => ({ ...s, keySaved: true }))
     setPrivBlurred(false)
   }
 
@@ -607,26 +609,64 @@ export default function SponsorPage() {
                   >
                     {state.keyPair.privateKeyHex}
                   </div>
-                  {!state.keySaved && (
-                    <p className="text-xs mt-1.5" style={{ color: '#FBBF24' }}>
-                      Download and save this key offline before creating the bounty.
-                    </p>
-                  )}
                 </div>
-                <div className="flex flex-wrap gap-2 pt-1">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={handleDownloadKey}
+
+                {/* —— CRITICAL SECURITY WARNING —— */}
+                <div
+                  className="rounded-xl p-4 space-y-3"
+                  style={{
+                    background: 'rgba(248,113,113,0.06)',
+                    border: '1px solid rgba(248,113,113,0.35)',
+                  }}
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="text-lg mt-0.5" aria-hidden>⚠️</span>
+                    <div>
+                      <p className="font-bold text-sm mb-1" style={{ color: '#F87171' }}>
+                        CRITICAL: Save your Private Key NOW
+                      </p>
+                      <p className="text-xs leading-relaxed" style={{ color: '#FCA5A5' }}>
+                        This key is stored only in your browser's local memory.
+                        If you close or refresh this tab without downloading it,
+                        the key will be destroyed permanently and you will be&nbsp;
+                        <strong style={{ color: '#F87171' }}>unable to decrypt any exploit payloads</strong>
+                        &nbsp;submitted to this bounty. Your USDT reward will be irreversibly locked.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={handleDownloadKey}
+                    >
+                      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      ⬇️ Download ztb_private_key.pem
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={handleGenerateKeys}>Regenerate</Button>
+                  </div>
+
+                  {/* Gate checkbox */}
+                  <label
+                    className="flex items-start gap-3 cursor-pointer group"
+                    htmlFor="key-saved-confirm"
                   >
-                    <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    Download Private Key
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={handleGenerateKeys}>
-                    Regenerate
-                  </Button>
+                    <input
+                      id="key-saved-confirm"
+                      type="checkbox"
+                      className="mt-0.5 w-4 h-4 cursor-pointer"
+                      style={{ accentColor: '#C9A853' }}
+                      checked={state.keySaved}
+                      onChange={e => setState(s => ({ ...s, keySaved: e.target.checked }))}
+                    />
+                    <span className="text-xs leading-relaxed" style={{ color: '#FBBF24' }}>
+                      I have securely saved my <code>ztb_private_key.pem</code> file to an offline location.
+                      I understand that losing this key means permanently losing access to submitted exploits.
+                    </span>
+                  </label>
                 </div>
               </div>
             )}

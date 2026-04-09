@@ -70,6 +70,14 @@ export const ZTB_ESCROW_ABI = [
     outputs: [],
   },
 
+  {
+    name: 'clearExpiredCommit',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'bountyId', type: 'uint256' }],
+    outputs: [],
+  },
+
   // ── READ FUNCTIONS ────────────────────────────────────────
 
   {
@@ -191,6 +199,16 @@ export const ZTB_ESCROW_ABI = [
     inputs: [
       { name: 'commitHash', type: 'bytes32', indexed: true },
       { name: 'hunter',     type: 'address', indexed: true },
+    ],
+  },
+
+  {
+    name: 'CommitCleared',
+    type: 'event',
+    inputs: [
+      { name: 'bountyId',          type: 'uint256', indexed: true  },
+      { name: 'slashedCommitter',  type: 'address', indexed: true  },
+      { name: 'forfeitedStake',    type: 'uint256', indexed: false },
     ],
   },
 

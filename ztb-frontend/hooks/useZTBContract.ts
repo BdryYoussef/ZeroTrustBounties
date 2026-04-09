@@ -215,18 +215,29 @@ export function useZTBContract() {
     })
   }
 
+  // ANYONE — Clear an expired commit (Anti-Griefing, TASK 1)
+  function clearExpiredCommit(bountyId: bigint) {
+    return writeContract({
+      address:      ESCROW_ADDRESS,
+      abi:          ZTB_ESCROW_ABI,
+      functionName: 'clearExpiredCommit',
+      args:         [bountyId],
+    })
+  }
+
   return {
     createBounty,
     commitProof,
     submitProof,
     cancelBounty,
     activateBounty,
-    isPending,   // true → MetaMask attend signature
-    isSuccess,   // true → transaction confirmée
-    isError,     // true → transaction échouée
-    error,       // détails si isError
-    txHash,      // hash de la transaction
-    reset,       // reset l'état après erreur
+    clearExpiredCommit,
+    isPending,
+    isSuccess,
+    isError,
+    error,
+    txHash,
+    reset,
   }
 }
 
