@@ -1,0 +1,212 @@
+/**
+ * ZTB V4.3 — Local Deployment Script
+ *
+ * Uses raw ethers v6 + JsonRpcProvider (no hardhat-ethers wrapping)
+ * so it connects directly to Anvil at http://127.0.0.1:8545.
+ *
+ * Deploys:  MockUSDT → MockRiscZeroVerifier → ZTBEscrow
+ * Patches:  .env.local, lib/wagmi.config.ts, hooks/useZTBContract.ts
+ *
+ * Usage (from ztb-frontend/):
+ *   HARDHAT_NETWORK=localhost npx hardhat compile --config hardhat.config.cjs
+ *   node scripts/deploy.cjs
+ */
+
+"use strict";
+
+const { ethers } = require("ethers");
+const fs   = require("fs");
+const path = require("path");
+
+// ── Paths ─────────────────────────────────────────────────────────────────
+const FRONTEND_ROOT = path.resolve(__dirname, "..");
+const ARTIFACTS_DIR = path.join(FRONTEND_ROOT, "artifacts", "contracts");
+
+// ── Config ────────────────────────────────────────────────────────────────
+const RPC_URL = process.env.ANVIL_RPC_URL || "http://127.0.0.1:8545";
+
+// Anvil account #0 private key (deterministic, always the same)
+const DEPLOYER_PRIVATE_KEY =
+  "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+
+// GUEST_IMAGE_ID from CONTEXT.md (EXTRACTION_IMAGE_ID Sprint 1)
+// = the 8 u32 words printed by host/src/main.rs in dev mode
+const PROOF_IMAGE_ID_U32 = [
+  2062952722, 1514172728, 3666612992, 1964921325,
+  4240132551, 3652829924, 1524893047, 3638279077,
+];
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function imageIdToBytes32(u32Array) {
+  const buf = Buffer.alloc(32);
+  for (let i = 0; i < 8; i++) {
+    buf.writeUInt32LE(u32Array[i], i * 4);
+  }
+  return "0x" + buf.toString("hex");
+}
+
+function loadArtifact(contractName) {
+  const file = path.join(
+    ARTIFACTS_DIR,
+    `${contractName}.sol`,
+    `${contractName}.json`
+  );
+  if (!fs.existsSync(file)) {
+    throw new Error(
+      `Artifact not found: ${file}\n` +
+      `Run: HARDHAT_NETWORK=localhost npx hardhat compile --config hardhat.config.cjs`
+    );
+  }
+  const artifact = JSON.parse(fs.readFileSync(file, "utf8"));
+  return { abi: artifact.abi, bytecode: artifact.bytecode };
+}
+
+async function deployContract(signer, contractName, ...constructorArgs) {
+  const { abi, bytecode } = loadArtifact(contractName);
+  const factory = new ethers.ContractFactory(abi, bytecode, signer);
+  const contract = await factory.deploy(...constructorArgs);
+  await contract.waitForDeployment();
+  return contract;
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────
+async function main() {
+  console.log("\n╔══════════════════════════════════════════════════════╗");
+  console.log("║     ZTB V4.3 — Local Anvil Deployment Script        ║");
+  console.log("╚══════════════════════════════════════════════════════╝\n");
+
+  // Connect to Anvil
+  const provider = new ethers.JsonRpcProvider(RPC_URL);
+  const network  = await provider.getNetwork();
+  console.log(`▶ Connected to: ${RPC_URL} (chainId: ${network.chainId})`);
+
+  const wallet = new ethers.Wallet(DEPLOYER_PRIVATE_KEY, provider);
+  console.log(`▶ Deployer    : ${wallet.address}`);
+  const balance = await provider.getBalance(wallet.address);
+  console.log(`▶ Balance     : ${ethers.formatEther(balance)} ETH\n`);
+
+  // 1. Deploy MockUSDT
+  console.log("[1/4] Deploying MockUSDT...");
+  const usdt = await deployContract(wallet, "MockUSDT");
+  const usdtAddress = await usdt.getAddress();
+  
+  // Mint 1,000,000 USDT to the deployer for testing
+  const mintTx = await usdt.mint(wallet.address, ethers.parseUnits("1000000", 6));
+  await mintTx.wait();
+  
+  console.log(`    ✅ MockUSDT deployed at: ${usdtAddress} (minted 1M fake USDT to deployer)`);
+
+  // 2. Deploy MockRiscZeroVerifier
+  console.log("\n[2/4] Deploying MockRiscZeroVerifier (permissive — dev mode)...");
+  const verifier = await deployContract(wallet, "MockRiscZeroVerifier");
+  const verifierAddress = await verifier.getAddress();
+  console.log(`    ✅ MockVerifier deployed at: ${verifierAddress}`);
+
+  // 3. Deploy ZTBEscrow
+  console.log("\n[3/4] Deploying ZTBEscrow...");
+  const imageId = imageIdToBytes32(PROOF_IMAGE_ID_U32);
+  console.log(`    ▶ IMAGE_ID: ${imageId}`);
+  const escrow = await deployContract(wallet, "ZTBEscrow", usdtAddress, verifierAddress, imageId);
+  const escrowAddress = await escrow.getAddress();
+  console.log(`    ✅ ZTBEscrow deployed at: ${escrowAddress}`);
+
+  // 4. Patch frontend files
+  console.log("\n[4/4] Patching frontend configuration...");
+
+  // Preserve any existing env vars not managed by deploy (e.g. Pinata JWT)
+  const ENV_FILE = path.join(FRONTEND_ROOT, ".env.local");
+  let existingPinataJWT = '';
+  let existingPinataGateway = '';
+  if (fs.existsSync(ENV_FILE)) {
+    const existing = fs.readFileSync(ENV_FILE, 'utf8');
+    const jwtMatch = existing.match(/^NEXT_PUBLIC_PINATA_JWT=(.*)$/m);
+    const gwMatch  = existing.match(/^NEXT_PUBLIC_PINATA_GATEWAY=(.*)$/m);
+    if (jwtMatch)  existingPinataJWT     = jwtMatch[1];
+    if (gwMatch)   existingPinataGateway = gwMatch[1];
+  }
+  const envContent = [
+    `# Auto-generated by scripts/deploy.cjs — ${new Date().toISOString()}`,
+    `NEXT_PUBLIC_ESCROW_ADDRESS=${escrowAddress}`,
+    `NEXT_PUBLIC_USDT_ADDRESS=${usdtAddress}`,
+    `NEXT_PUBLIC_VERIFIER_ADDRESS=${verifierAddress}`,
+    `NEXT_PUBLIC_IMAGE_ID=${imageId}`,
+    `NEXT_PUBLIC_CHAIN_ID=31337`,
+    `NEXT_PUBLIC_RPC_URL=http://127.0.0.1:8545`,
+    `NEXT_PUBLIC_APP_URL=http://localhost:3000`,
+    ``,
+    `# ── Pinata IPFS (preserved from previous .env.local) ─────────────────`,
+    `NEXT_PUBLIC_PINATA_JWT=${existingPinataJWT}`,
+    `NEXT_PUBLIC_PINATA_GATEWAY=${existingPinataGateway || 'https://gateway.pinata.cloud'}`,
+  ].join("\n") + "\n";
+  fs.writeFileSync(ENV_FILE, envContent, "utf8");
+  console.log(`    ✅ Written: .env.local (Pinata JWT preserved)`);
+
+  // ── lib/wagmi.ts (runtime config, NOT wagmi.config.ts which is the CLI config) ──
+  const WAGMI_RUNTIME = path.join(FRONTEND_ROOT, "lib", "wagmi.ts");
+  const wagmiContent = `// lib/wagmi.ts — Runtime Wagmi config
+// Auto-patched for LOCAL DEMO by scripts/deploy.cjs — ${new Date().toISOString()}
+import { createConfig, http } from 'wagmi'
+import { hardhat }           from 'wagmi/chains'
+import { injected }          from 'wagmi/connectors'
+
+export const config = createConfig({
+  chains:     [hardhat],
+  connectors: [injected()],
+  transports: {
+    [hardhat.id]: http(process.env.NEXT_PUBLIC_RPC_URL ?? 'http://127.0.0.1:8545'),
+  },
+  ssr: false,
+})
+`;
+  fs.writeFileSync(WAGMI_RUNTIME, wagmiContent, "utf8");
+  console.log(`    ✅ Patched: lib/wagmi.ts → Anvil (hardhat chain 31337}`);
+
+  // ── hooks/useZTBContract.ts ─────────────────────────────────────────────
+  const HOOK_FILE = path.join(FRONTEND_ROOT, "hooks", "useZTBContract.ts");
+  let hookContent = fs.readFileSync(HOOK_FILE, "utf8");
+  hookContent = hookContent.replace(
+    /const ESCROW_ADDRESS = \([\s\S]*?\) as `0x\$\{string\}`/,
+    `const ESCROW_ADDRESS = (\n  process.env.NEXT_PUBLIC_ESCROW_ADDRESS\n  ?? '${escrowAddress}'\n) as \`0x\${string}\``
+  );
+  fs.writeFileSync(HOOK_FILE, hookContent, "utf8");
+  console.log(`    ✅ Patched: hooks/useZTBContract.ts → ${escrowAddress}`);
+
+  // ── deployment.json ─────────────────────────────────────────────────────
+  const receipt = {
+    timestamp:      new Date().toISOString(),
+    network:        "anvil-localhost",
+    chainId:        Number(network.chainId),
+    deployer:       wallet.address,
+    contracts: {
+      MockUSDT:             usdtAddress,
+      MockRiscZeroVerifier: verifierAddress,
+      ZTBEscrow:            escrowAddress,
+    },
+    imageId,
+  };
+  fs.writeFileSync(
+    path.join(FRONTEND_ROOT, "deployment.json"),
+    JSON.stringify(receipt, null, 2),
+    "utf8"
+  );
+  console.log(`    ✅ Written: deployment.json`);
+
+  // ── Summary ────────────────────────────────────────────────────────────
+  console.log("\n╔══════════════════════════════════════════════════════╗");
+  console.log("║               DEPLOYMENT SUMMARY                    ║");
+  console.log("╠══════════════════════════════════════════════════════╣");
+  console.log(`║  Network      : Anvil localhost (chain 31337)        ║`);
+  console.log(`║  MockUSDT     : ${usdtAddress} ║`);
+  console.log(`║  MockVerifier : ${verifierAddress} ║`);
+  console.log(`║  ZTBEscrow    : ${escrowAddress} ║`);
+  console.log(`║  IMAGE_ID     : ${imageId.slice(0, 18)}...   ║`);
+  console.log("╚══════════════════════════════════════════════════════╝\n");
+}
+
+main().then(() => {
+  process.exit(0);
+}).catch((err) => {
+  console.error("\n❌ Deployment failed:", err.message);
+  if (err.stack) console.error(err.stack);
+  process.exit(1);
+});

@@ -1,0 +1,8 @@
+{
+  "project": "Zero-Trust Bounties",
+  "type": "Baseline_B",
+  "description": "Extended Security Policies",
+  "nodes": 512,
+  "bitmap": [1, 1, 1, 1, 1, 0, 1, 1, 1, 0],
+  "merkleRoot": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+}

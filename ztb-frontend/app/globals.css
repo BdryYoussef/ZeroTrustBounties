@@ -1,0 +1,398 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════
+   ZTB — Zero Trust Bounties V4.3 Design System
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  /* Brand */
+  --gold:         #C9A853;
+  --gold-dim:     #8B7038;
+  --gold-glow:    rgba(201,168,83,0.22);
+  --blue:         #5FA8D3;
+  --navy:         #1B4F72;
+
+  /* Surfaces */
+  --bg:           #0B0E14;
+  --surface:      #11151F;
+  --surface-2:    #181D2B;
+  --surface-3:    #1E2436;
+  --border:       rgba(255,255,255,0.07);
+  --border-gold:  rgba(201,168,83,0.30);
+  --border-blue:  rgba(95,168,211,0.30);
+
+  /* Text */
+  --text:         #E8EDF5;
+  --muted:        #6B7A8D;
+  --muted-light:  #9AAABB;
+
+  /* States */
+  --success:      #4ADE80;
+  --danger:       #F87171;
+  --warning:      #FBBF24;
+  --info:         #5FA8D3;
+
+  /* Font stacks */
+  --font-title:   "Sora", system-ui, sans-serif;
+  --font-ui:      "Space Grotesk", system-ui, sans-serif;
+  --font-mono:    "Consolas", "Monaco", "Courier New", monospace;
+}
+
+/* Light theme override */
+:root[data-theme='executive-light'] {
+  --bg:           #F0F4F8;
+  --surface:      rgba(255,255,255,0.92);
+  --surface-2:    rgba(240,244,248,0.85);
+  --surface-3:    rgba(230,236,244,0.7);
+  --border:       rgba(0,0,0,0.08);
+  --border-gold:  rgba(139,112,56,0.35);
+  --text:         #1A2030;
+  --muted:        #5E6E81;
+  --muted-light:  #8A9CB0;
+  --gold:         #A8853B;
+  --gold-dim:     #7A6028;
+  --gold-glow:    rgba(168,133,59,0.2);
+}
+
+/* ── Reset & Base ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-ui);
+  color: var(--text);
+  background-color: var(--bg);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Dot-grid mesh (Sindri-inspired) */
+  background-image:
+    radial-gradient(circle, rgba(201,168,83,0.055) 1px, transparent 1px),
+    radial-gradient(75vw 65vw at -8% -18%, rgba(27,79,114,0.40), transparent 62%),
+    radial-gradient(60vw 55vw at 108% -8%, rgba(95,168,211,0.25), transparent 62%),
+    radial-gradient(42vw 36vw at 50% 108%, rgba(201,168,83,0.14), transparent 65%);
+  background-size: 26px 26px, auto, auto, auto;
+}
+
+:root[data-theme='executive-light'] body {
+  background-image:
+    radial-gradient(circle, rgba(139,112,56,0.04) 1px, transparent 1px),
+    radial-gradient(75vw 65vw at -8% -18%, rgba(27,79,114,0.10), transparent 62%),
+    radial-gradient(60vw 55vw at 108% -8%, rgba(95,168,211,0.10), transparent 62%);
+  background-size: 26px 26px, auto, auto;
+  background-color: #F0F4F8;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(201,168,83,0.28); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(201,168,83,0.5); }
+
+/* ── Typography ──────────────────────────────────────────── */
+h1,h2,h3,h4,h5,h6 {
+  font-family: var(--font-title);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--text);
+}
+
+code, pre, .font-mono { font-family: var(--font-mono); }
+
+::selection { background: rgba(201,168,83,0.22); color: var(--text); }
+:focus-visible { outline: 2px solid rgba(201,168,83,0.55); outline-offset: 2px; border-radius: 4px; }
+
+/* ── Gradient text utilities ───────────────────────────────── */
+.gold-text {
+  background: linear-gradient(135deg, #BF9940 0%, #E2C46A 48%, #C9A853 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.blue-text {
+  background: linear-gradient(135deg, #1B4F72 0%, #5FA8D3 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.gold-blue-text {
+  background: linear-gradient(135deg, #C9A853 0%, #5FA8D3 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ── Navbar spacer ────────────────────────────────────────── */
+.nav-spacer { height: 68px; }
+
+/* ── Page shells ──────────────────────────────────────────── */
+.page-shell {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 36px 20px 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.page-shell-wide {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 36px 20px 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── ZTB Card ─────────────────────────────────────────────── */
+.ztb-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 22px 24px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05);
+  transition: border-color 250ms ease, box-shadow 250ms ease, transform 200ms ease;
+  backdrop-filter: blur(6px);
+}
+.ztb-card:hover {
+  border-color: rgba(201,168,83,0.22);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(201,168,83,0.18), inset 0 1px 0 rgba(201,168,83,0.06);
+}
+
+/* ── ZTB Button ───────────────────────────────────────────── */
+.ztb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 200ms ease;
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+  user-select: none;
+}
+.ztb-btn:disabled { opacity: 0.42; cursor: not-allowed; transform: none !important; }
+.ztb-btn:hover:not(:disabled) { transform: translateY(-2px); }
+.ztb-btn:active:not(:disabled) { transform: translateY(0); }
+
+.ztb-btn-primary {
+  background: linear-gradient(135deg, #BF9940 0%, #C9A853 40%, #E2C46A 100%);
+  color: #0B0E14;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(201,168,83,0.3);
+  animation: glowPulse 3s ease-in-out infinite;
+}
+.ztb-btn-primary:hover:not(:disabled) {
+  box-shadow: 0 8px 28px rgba(201,168,83,0.5);
+}
+.ztb-btn-secondary {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text);
+}
+.ztb-btn-secondary:hover:not(:disabled) {
+  border-color: rgba(201,168,83,0.35);
+  background: var(--surface-3);
+}
+.ztb-btn-danger {
+  background: rgba(248,113,113,0.10);
+  border-color: rgba(248,113,113,0.28);
+  color: #F87171;
+}
+.ztb-btn-danger:hover:not(:disabled) {
+  background: rgba(248,113,113,0.18);
+}
+.ztb-btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+}
+.ztb-btn-ghost:hover:not(:disabled) {
+  color: var(--gold);
+  background: rgba(201,168,83,0.08);
+  border-color: rgba(201,168,83,0.2);
+}
+.ztb-btn-sm { padding: 7px 12px; font-size: 0.8rem; border-radius: 9px; }
+.ztb-btn-lg { padding: 13px 24px; font-size: 1rem; border-radius: 14px; }
+
+/* ── ZTB Badge ────────────────────────────────────────────── */
+.ztb-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border: 1px solid;
+}
+.ztb-badge-success { background: rgba(74,222,128,0.10); border-color: rgba(74,222,128,0.28); color: #4ADE80; }
+.ztb-badge-error   { background: rgba(248,113,113,0.10); border-color: rgba(248,113,113,0.28); color: #F87171; }
+.ztb-badge-warning { background: rgba(251,191,36,0.10); border-color: rgba(251,191,36,0.28); color: #FBBF24; }
+.ztb-badge-info    { background: rgba(95,168,211,0.10); border-color: rgba(95,168,211,0.28); color: #5FA8D3; }
+.ztb-badge-gold    { background: rgba(201,168,83,0.10); border-color: rgba(201,168,83,0.28); color: #C9A853; }
+.ztb-badge-subtle  { background: rgba(255,255,255,0.05); border-color: var(--border); color: var(--muted-light); }
+
+/* ── ZTB Input ────────────────────────────────────────────── */
+.ztb-input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 11px 14px;
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+  outline: none;
+  -webkit-appearance: none;
+}
+.ztb-input:focus {
+  border-color: rgba(201,168,83,0.5);
+  box-shadow: 0 0 0 3px rgba(201,168,83,0.10);
+}
+.ztb-input::placeholder { color: var(--muted); }
+.ztb-input-mono {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  word-break: break-all;
+}
+
+/* ── ZTB Section label ─────────────────────────────────────── */
+.ztb-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+/* ── Mono data display ────────────────────────────────────── */
+.mono-box {
+  background: rgba(11,18,30,0.7);
+  border: 1px solid rgba(201,168,83,0.12);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  word-break: break-all;
+  color: var(--muted-light);
+}
+
+/* ── Step indicator ──────────────────────────────────────── */
+.step-number {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  transition: all 300ms ease;
+}
+.step-number-idle   { background: rgba(255,255,255,0.06); color: var(--muted); border: 1px solid var(--border); }
+.step-number-active { background: rgba(201,168,83,0.18); color: var(--gold); border: 1px solid rgba(201,168,83,0.4); }
+.step-number-done   { background: rgba(74,222,128,0.18); color: #4ADE80; border: 1px solid rgba(74,222,128,0.4); }
+
+/* ── Error / success notes ────────────────────────────────── */
+.error-note { color: var(--danger); font-size: 0.84rem; }
+.muted { color: var(--muted); }
+
+/* ── Ripple keyframe (injected by Button component) ──────── */
+@keyframes ripple {
+  from { transform: scale(0); opacity: 0.5; }
+  to   { transform: scale(2.5); opacity: 0; }
+}
+
+/* ── Animations ──────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes glowPulse {
+  0%,100% { box-shadow: 0 0 14px rgba(201,168,83,0.3), 0 4px 20px rgba(201,168,83,0.15); }
+  50%     { box-shadow: 0 0 30px rgba(201,168,83,0.6), 0 8px 40px rgba(201,168,83,0.25); }
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes checkDraw {
+  from { stroke-dashoffset: 50; }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes borderScan {
+  0%,100% { border-color: rgba(201,168,83,0.15); }
+  50%     { border-color: rgba(201,168,83,0.5); }
+}
+
+/* ── Progress bar ─────────────────────────────────────────── */
+.ztb-progress {
+  background: rgba(255,255,255,0.06);
+  border-radius: 999px;
+  height: 5px;
+  overflow: hidden;
+}
+.ztb-progress-bar {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--gold), #5FA8D3);
+  transition: width 500ms ease;
+}
+
+/* ── Theme switch (redesigned) ───────────────────────────── */
+.theme-switch {
+  position: relative;
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+}
+.theme-pill {
+  border: none;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  transition: all 160ms ease;
+}
+.theme-pill.active {
+  background: rgba(201,168,83,0.18);
+  color: var(--gold);
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .page-shell, .page-shell-wide { padding: 20px 14px 48px; }
+}
