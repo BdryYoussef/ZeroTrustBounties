@@ -1,4 +1,6 @@
 # ZTB — Zero-Trust Bounties
+<img width="519" height="319" alt="Gemini_Generated_Image_ct7xl2ct7xl2ct7x-removebg-preview" src="https://github.com/user-attachments/assets/31ebe831-ec4d-4cd4-adea-346d298fa753" />
+
 
 > A trustless, private, and cryptographically enforced bug bounty protocol for WebAssembly programs.
 
