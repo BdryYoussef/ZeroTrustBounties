@@ -73,7 +73,7 @@ body {
   /* Dot-grid mesh (Sindri-inspired) */
   background-image:
     radial-gradient(circle, rgba(201,168,83,0.055) 1px, transparent 1px),
-    radial-gradient(75vw 65vw at -8% -18%, rgba(27,79,114,0.40), transparent 62%),
+    radial-gradient(75vw 65vw at -8% -18%, rgba(27,79,114,0.15), transparent 62%),
     radial-gradient(60vw 55vw at 108% -8%, rgba(95,168,211,0.25), transparent 62%),
     radial-gradient(42vw 36vw at 50% 108%, rgba(201,168,83,0.14), transparent 65%);
   background-size: 26px 26px, auto, auto, auto;

@@ -45,9 +45,9 @@ export function Navbar() {
       height: 68,
       display: 'flex',
       alignItems: 'center',
-      background: 'rgba(11,14,20,0.88)',
-      backdropFilter: 'blur(16px)',
-      WebkitBackdropFilter: 'blur(16px)',
+      background: 'rgba(6,8,11,0.4)',
+      backdropFilter: 'blur(4px)',
+      WebkitBackdropFilter: 'blur(4px)',
       borderBottom: '1px solid rgba(255,255,255,0.07)',
       padding: '0 20px',
     }}>
