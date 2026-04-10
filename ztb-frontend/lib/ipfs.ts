@@ -122,13 +122,34 @@ export async function uploadWASM(
 
 // ── Sponsor flow: upload dual bitmap pair ─────────────────────
 
+async function pinFileWithRetry(
+  blob: Blob,
+  name: string,
+  maxAttempts = 3,
+): Promise<{ cid: string; url: string }> {
+  let lastErr: unknown
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await pinFile(blob, name)
+    } catch (e) {
+      lastErr = e
+      if (attempt < maxAttempts) {
+        // Exponential back-off: 2s, 4s, 8s
+        await new Promise(r => setTimeout(r, 2000 * attempt))
+      }
+    }
+  }
+  throw lastErr
+}
+
 export async function uploadDualBitmap(
   bytesA: Uint8Array,
   bytesB: Uint8Array,
 ): Promise<{ url: string; cidA: string; cidB: string }> {
-  const rA = await pinFile(new Blob([bytesA], { type: 'application/octet-stream' }), 'baseline_a.bin')
-  await new Promise(r => setTimeout(r, 600)) // Pinata free-tier debounce
-  const rB = await pinFile(new Blob([bytesB], { type: 'application/octet-stream' }), 'baseline_b.bin')
+  const rA = await pinFileWithRetry(new Blob([bytesA], { type: 'application/octet-stream' }), 'baseline_a.bin')
+  // Strict 2s debounce before baseline_b to respect Pinata free-tier rate limits
+  await new Promise(r => setTimeout(r, 2000))
+  const rB = await pinFileWithRetry(new Blob([bytesB], { type: 'application/octet-stream' }), 'baseline_b.bin')
   return {
     url:  rA.url,
     cidA: rA.cid,

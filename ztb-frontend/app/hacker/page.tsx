@@ -385,7 +385,7 @@ export default function HackerPage() {
                 )}
               </div>
 
-              {/* TASK 5 — Download Target Environment */}
+              {/* Target Environment — Checksums from on-chain */}
               {bountyNum !== null && bountyValid && bountyData && (
                 <div
                   className="mt-3 rounded-xl p-4 space-y-3"
@@ -394,43 +394,34 @@ export default function HackerPage() {
                     border: '1px solid rgba(95,168,211,0.25)',
                   }}
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-sm mb-0.5" style={{ color: '#5FA8D3' }}>
-                        ⬇️ Download Target Environment
-                      </p>
-                      <p className="text-xs" style={{ color: 'var(--muted)' }}>WASM binary + baseline bitmaps — required to run the local prover</p>
-                    </div>
+                  <div>
+                    <p className="font-semibold text-sm mb-0.5" style={{ color: '#5FA8D3' }}>
+                      Target Environment — On-Chain Checksums
+                    </p>
+                    <p className="text-xs" style={{ color: 'var(--muted)' }}>
+                      SHA-256 checksums stored on-chain. Request the IPFS CIDs from the sponsor to download the actual files.
+                    </p>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     {[
-                      { label: 'Target WASM',          cid: (bountyData[0] as string), filename: `target_${bountyId}.wasm` },
-                      { label: 'Baseline A (AFL XOR)',  cid: (bountyData[4] as string), filename: `baseline_a_${bountyId}.bin` },
-                      { label: 'Baseline B (Knuth)',    cid: (bountyData[5] as string), filename: `baseline_b_${bountyId}.bin` },
-                    ].map(({ label, cid, filename }) => {
-                      const gateway = process.env.NEXT_PUBLIC_PINATA_GATEWAY ?? 'https://gateway.pinata.cloud'
-                      const url = `${gateway}/ipfs/${cid}`
-                      return (
-                        <div key={label} className="flex items-center justify-between gap-3 flex-wrap">
-                          <span className="text-xs" style={{ color: 'var(--muted-light)' }}>{label}</span>
-                          <a
-                            href={url}
-                            download={filename}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-xs font-mono px-3 py-1 rounded-lg transition-all hover:opacity-80"
-                            style={{
-                              color: '#5FA8D3',
-                              background: 'rgba(95,168,211,0.08)',
-                              border: '1px solid rgba(95,168,211,0.2)',
-                              textDecoration: 'none',
-                            }}
-                          >
-                            {String(cid).slice(0, 14)}… ↗
-                          </a>
+                      { label: 'Target WASM (SHA-256)',       value: bountyData[0] as string },
+                      { label: 'Baseline A hash (AFL XOR)',   value: bountyData[4] as string },
+                      { label: 'Baseline B hash (Knuth)',     value: bountyData[5] as string },
+                    ].map(({ label, value }) => (
+                      <div key={label}>
+                        <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--muted)' }}>{label}</p>
+                        <div
+                          className="font-mono text-[0.67rem] break-all rounded-lg px-3 py-2 select-all"
+                          style={{
+                            color: '#5FA8D3',
+                            background: 'rgba(95,168,211,0.06)',
+                            border: '1px solid rgba(95,168,211,0.15)',
+                          }}
+                        >
+                          {String(value)}
                         </div>
-                      )
-                    })}
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
