@@ -22,6 +22,13 @@ interface ProofData {
   c1a: boolean; c1b: boolean; c2: boolean; c3: boolean
 }
 
+interface MetadataAssets {
+  targetCID:    string
+  baselineACID: string
+  baselineBCID: string
+  name?:        string
+}
+
 // ── Mono data field ───────────────────────────────────────────
 
 function DataField({ label, value, accent }: { label: string; value: string; accent?: string }) {
@@ -137,22 +144,40 @@ export default function HackerPage() {
   const [submitError, setSubmitError] = useState('')
   const [encCID,      setEncCID]      = useState('')
 
+  // ── Metadata state (Task 3) ───────────────────────────────
+  const [metadataAssets, setMetadataAssets] = useState<MetadataAssets | null>(null)
+  const [metaLoading,    setMetaLoading]    = useState(false)
+
   const step1Done = commitDone
   const step2Done = !!proofData
   const step3Done = isSuccess
 
   const bountyNum = bountyId.trim() !== '' ? BigInt(bountyId) : null
   const { data: bountyData } = useBounty(bountyNum ?? 0n)
-  
+
   // Refresh timelock based on bounty
   const proofsOpenAt = bountyData ? Number(bountyData[11] as bigint) : 0
   const isTimelocked = proofsOpenAt > (Date.now() / 1000)
-  
+
   const isOpen = bountyData ? (bountyData[16] as boolean) : false
   const isBountyPending = !!bountyData && !isOpen && proofsOpenAt === 0
   const isSettledOrClosed = !!bountyData && !isOpen && proofsOpenAt > 0
-  
+
   const bountyValid = !!bountyData && isOpen
+
+  // ── Fetch metadata JSON from IPFS when bounty loads (Task 3) ──
+  useEffect(() => {
+    if (!bountyData) { setMetadataAssets(null); return }
+    const metadataURI = bountyData[17] as string
+    if (!metadataURI) { setMetadataAssets(null); return }
+    const gateway = process.env.NEXT_PUBLIC_PINATA_GATEWAY ?? 'https://gateway.pinata.cloud'
+    setMetaLoading(true)
+    fetch(`${gateway}/ipfs/${metadataURI}`)
+      .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
+      .then((json: MetadataAssets) => setMetadataAssets(json))
+      .catch(err => console.warn('[ZTB] Could not fetch metadata:', err))
+      .finally(() => setMetaLoading(false))
+  }, [bountyData])
 
   // ── Compute commitment on file change ────────────────────
   useEffect(() => {
@@ -385,7 +410,7 @@ export default function HackerPage() {
                 )}
               </div>
 
-              {/* Target Environment — Checksums from on-chain */}
+              {/* Target Environment — Live Download Links from IPFS Metadata */}
               {bountyNum !== null && bountyValid && bountyData && (
                 <div
                   className="mt-3 rounded-xl p-4 space-y-3"
@@ -394,35 +419,65 @@ export default function HackerPage() {
                     border: '1px solid rgba(95,168,211,0.25)',
                   }}
                 >
-                  <div>
-                    <p className="font-semibold text-sm mb-0.5" style={{ color: '#5FA8D3' }}>
-                      Target Environment — On-Chain Checksums
-                    </p>
-                    <p className="text-xs" style={{ color: 'var(--muted)' }}>
-                      SHA-256 checksums stored on-chain. Request the IPFS CIDs from the sponsor to download the actual files.
-                    </p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-sm mb-0.5" style={{ color: '#5FA8D3' }}>
+                        Target Environment
+                      </p>
+                      <p className="text-xs" style={{ color: 'var(--muted)' }}>
+                        {metaLoading
+                          ? 'Fetching asset links from IPFS...'
+                          : metadataAssets
+                          ? 'Direct IPFS download links — verify SHA-256 checksums before use'
+                          : 'Metadata not yet available for this bounty'}
+                      </p>
+                    </div>
+                    {metaLoading && (
+                      <svg className="w-4 h-4 animate-spin flex-shrink-0" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity=".2" />
+                        <path fill="currentColor" opacity=".8" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                    )}
                   </div>
-                  <div className="space-y-2.5">
-                    {[
-                      { label: 'Target WASM (SHA-256)',       value: bountyData[0] as string },
-                      { label: 'Baseline A hash (AFL XOR)',   value: bountyData[4] as string },
-                      { label: 'Baseline B hash (Knuth)',     value: bountyData[5] as string },
-                    ].map(({ label, value }) => (
-                      <div key={label}>
-                        <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--muted)' }}>{label}</p>
-                        <div
-                          className="font-mono text-[0.67rem] break-all rounded-lg px-3 py-2 select-all"
-                          style={{
-                            color: '#5FA8D3',
-                            background: 'rgba(95,168,211,0.06)',
-                            border: '1px solid rgba(95,168,211,0.15)',
-                          }}
-                        >
-                          {String(value)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+
+                  {metadataAssets ? (
+                    <div className="space-y-2">
+                      {[
+                        { label: 'Target WASM',         cid: metadataAssets.targetCID,    filename: `target_${bountyId}.wasm` },
+                        { label: 'Baseline A (AFL XOR)', cid: metadataAssets.baselineACID, filename: `baseline_a_${bountyId}.bin` },
+                        { label: 'Baseline B (Knuth)',   cid: metadataAssets.baselineBCID, filename: `baseline_b_${bountyId}.bin` },
+                      ].map(({ label, cid, filename }) => {
+                        const gateway = process.env.NEXT_PUBLIC_PINATA_GATEWAY ?? 'https://gateway.pinata.cloud'
+                        return (
+                          <div key={label} className="flex items-center justify-between gap-3 flex-wrap">
+                            <span className="text-xs" style={{ color: 'var(--muted-light)' }}>{label}</span>
+                            <a
+                              href={`${gateway}/ipfs/${cid}`}
+                              download={filename}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-xs font-mono px-3 py-1 rounded-lg transition-all hover:opacity-80 inline-flex items-center gap-1.5"
+                              style={{
+                                color: '#5FA8D3',
+                                background: 'rgba(95,168,211,0.1)',
+                                border: '1px solid rgba(95,168,211,0.3)',
+                                textDecoration: 'none',
+                              }}
+                            >
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                              </svg>
+                              {cid.slice(0, 12)}&hellip;
+                            </a>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ) : !metaLoading && (
+                    <p className="text-xs font-mono" style={{ color: 'var(--muted)' }}>
+                      Metadata URI: {String(bountyData[17] || '(not set)')}
+                    </p>
+                  )}
                 </div>
               )}
 

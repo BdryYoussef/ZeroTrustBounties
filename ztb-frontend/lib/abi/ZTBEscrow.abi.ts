@@ -23,6 +23,7 @@ export const ZTB_ESCROW_ABI = [
       { name: 'eciesPublicKey',      type: 'bytes'   },
       { name: 'reward',              type: 'uint256' },
       { name: 'rewardFloor',         type: 'uint256' },
+      { name: '_metadataURI',        type: 'string'  },
     ],
     outputs: [],
   },
@@ -104,6 +105,7 @@ export const ZTB_ESCROW_ABI = [
       { name: 'sponsor',             type: 'address' },
       { name: 'eciesPublicKey',      type: 'bytes'   },
       { name: 'isOpen',              type: 'bool'    },
+      { name: 'metadataURI',         type: 'string'  },
     ],
   },
 

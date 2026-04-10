@@ -38,20 +38,21 @@ const ERC20_ABI = [
 // ── Types ─────────────────────────────────────────────────────
 
 export interface CreateBountyArgs {
-  targetCID:           `0x${string}`  // SHA256 du WASM
-  staticPropsHash:     `0x${string}`  // SHA256 assertions
-  baselineMerkleRootA: `0x${string}`  // Merkle root bitmap A
-  baselineMerkleRootB: `0x${string}`  // Merkle root bitmap B
-  baselineAHash:       `0x${string}`  // SHA256 bitmap A
-  baselineBHash:       `0x${string}`  // SHA256 bitmap B
-  financialConfigHash: `0x${string}`  // SHA256 FinancialConfig
+  targetCID:           `0x${string}`
+  staticPropsHash:     `0x${string}`
+  baselineMerkleRootA: `0x${string}`
+  baselineMerkleRootB: `0x${string}`
+  baselineAHash:       `0x${string}`
+  baselineBHash:       `0x${string}`
+  financialConfigHash: `0x${string}`
   domain:              Domain
   mode:                VerificationMode
-  extractionReceipt:   `0x${string}`  // receipt Groth16 extraction
+  extractionReceipt:   `0x${string}`
   maxSteps:            bigint
-  eciesPublicKey:      `0x${string}`  // clé publique sponsor
-  rewardUsdt:          string         // ex: "1000" → converti en 6 décimales
-  rewardFloorUsdt:     string         // ex: "700"  → 70% si RELAXED sans C3
+  eciesPublicKey:      `0x${string}`
+  rewardUsdt:          string
+  rewardFloorUsdt:     string
+  metadataURI:         string   // IPFS CID of the metadata JSON
 }
 
 export interface CommitProofArgs {
@@ -163,6 +164,7 @@ export function useZTBContract() {
         args.eciesPublicKey,
         rewardWei,
         rewardFloorWei,
+        args.metadataURI,        // new: IPFS CID of metadata JSON
       ],
     })
   }

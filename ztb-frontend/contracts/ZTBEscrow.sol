@@ -44,6 +44,7 @@ contract ZTBEscrow {
         address sponsor;
         bytes   eciesPublicKey;
         bool    isOpen;
+        string  metadataURI;        // IPFS CID of the metadata JSON (targetCID + baselineCIDs)
     }
 
     struct CommitInfo {
@@ -117,11 +118,12 @@ contract ZTBEscrow {
         bytes32        financialConfigHash,
         uint8          domain,
         uint8          mode,
-        bytes calldata extractionReceipt,      // Groth16 receipt (future: verify on-chain)
+        bytes calldata extractionReceipt,
         uint256        maxSteps,
         bytes calldata eciesPublicKey,
         uint256        reward,
-        uint256        rewardFloor
+        uint256        rewardFloor,
+        string calldata _metadataURI
     ) external {
         require(reward > 0, "Reward must be > 0");
         require(
@@ -148,7 +150,8 @@ contract ZTBEscrow {
             mode:                Mode(mode),
             sponsor:             msg.sender,
             eciesPublicKey:      eciesPublicKey,
-            isOpen:              false // PENDING 72h state
+            isOpen:              false, // PENDING 72h state
+            metadataURI:         _metadataURI
         });
 
         emit BountyCreated(bId, msg.sender, reward, domain, mode);

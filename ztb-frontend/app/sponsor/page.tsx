@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAccount, useConnect, useDisconnect, useChainId, usePublicClient } from 'wagmi'
 import { generateECIESKeyPair, decryptPayload, hexToBytes, type ECIESKeyPair } from '@/lib/ecies'
-import { uploadWASM, uploadDualBitmap, computeFileCID, computeBytesCID } from '@/lib/ipfs'
+import { uploadWASM, uploadDualBitmap, computeFileCID, computeBytesCID, pinJSON } from '@/lib/ipfs'
 import useZTBContract, { useBounty } from '@/hooks/useZTBContract'
 import { parseUnits, formatUnits, parseAbiItem, hexToString } from 'viem'
 import { type Domain, type VerificationMode, DOMAIN_LABELS, MODE_LABELS } from '@/lib/abi/ZTBEscrow.abi'
@@ -24,15 +24,16 @@ interface FinancialConfig {
 
 interface SponsorState {
   wasmFile:       File | null
-  wasmCID:        string
+  wasmCID:        string   // sha256 bytes32 for on-chain
+  wasmIpfsCID:    string   // actual Pinata IPFS CID for metadata JSON
   wasmIPFSUrl:    string
   wasmUploading:  boolean
   bitmapAFile:    File | null
   bitmapBFile:    File | null
   bitmapAHash:    string | null
   bitmapBHash:    string | null
-  bitmapACID:     string
-  bitmapBCID:     string
+  bitmapACID:     string   // Pinata IPFS CID for baseline A
+  bitmapBCID:     string   // Pinata IPFS CID for baseline B
   bitmapACoverage: number
   bitmapBCoverage: number
   bitmapUploading: boolean
@@ -93,7 +94,7 @@ export default function SponsorPage() {
   const publicClient = usePublicClient()
 
   const [state, setState] = useState<SponsorState>({
-    wasmFile: null, wasmCID: '', wasmIPFSUrl: '', wasmUploading: false,
+    wasmFile: null, wasmCID: '', wasmIpfsCID: '', wasmIPFSUrl: '', wasmUploading: false,
     bitmapAFile: null, bitmapBFile: null,
     bitmapAHash: null, bitmapBHash: null,
     bitmapACID: '', bitmapBCID: '',
@@ -177,7 +178,9 @@ export default function SponsorPage() {
     setGlobalError(null)
     try {
       const [result, cid] = await Promise.all([uploadWASM(file), computeFileCID(file)])
-      setState(s => ({ ...s, wasmCID: cid, wasmIPFSUrl: result.url, wasmUploading: false }))
+      // result.cid = Pinata IPFS CID (for metadata JSON)
+      // cid        = SHA-256 bytes32   (for on-chain targetCID)
+      setState(s => ({ ...s, wasmCID: cid, wasmIpfsCID: result.cid, wasmIPFSUrl: result.url, wasmUploading: false }))
     } catch (e) {
       setGlobalError('WASM upload failed: ' + String(e))
       setState(s => ({ ...s, wasmUploading: false }))
@@ -260,6 +263,18 @@ export default function SponsorPage() {
     if (!state.rewardUsdt || parseFloat(state.rewardUsdt) <= 0) return setGlobalError('Set a USDT reward > 0')
     if (state.mode === 1 && parseFloat(state.rewardFloorUsdt) > parseFloat(state.rewardUsdt)) return setGlobalError('Floor reward cannot exceed maximum reward')
     try {
+      // Build and upload the metadata JSON containing all IPFS CIDs
+      setGlobalError('Uploading metadata to IPFS...')
+      const metadata = {
+        name:         `ZTB Bounty — ${state.wasmFile?.name ?? 'target'}`,
+        description:  'ZTB V4.3 Target Assets — WASM binary + coverage bitmaps',
+        targetCID:    state.wasmIpfsCID,
+        baselineACID: state.bitmapACID,
+        baselineBCID: state.bitmapBCID,
+      }
+      const { cid: metadataCID } = await pinJSON(metadata, `ztb-bounty-metadata-${Date.now()}`)
+      setGlobalError(null)
+
       await createBounty({
         targetCID:           state.wasmCID as `0x${string}`,
         staticPropsHash:     ('0x' + '0'.repeat(64)) as `0x${string}`,
@@ -275,6 +290,7 @@ export default function SponsorPage() {
         eciesPublicKey:      state.keyPair.publicKeyHex as `0x${string}`,
         rewardUsdt:          state.rewardUsdt,
         rewardFloorUsdt:     state.rewardFloorUsdt || state.rewardUsdt,
+        metadataURI:         metadataCID,
       })
     } catch (e) { setGlobalError('createBounty failed: ' + String(e)) }
   }
